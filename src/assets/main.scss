@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --mainColor: orange;
+  --subColor: blue;
+  --gray-100: #f1f5f9;
+  --gray-300: #cbd5e1;
+  --gray-500: #64748b;
+  --gray-700: #334155;
+  --gray-900: #0f172a;
+}
+
+@layer base {
+  table {
+    tr {
+      th,
+      td {
+        @apply whitespace-nowrap border border-gray-300;
+      }
+
+      td {
+        @apply p-2 text-right first:text-center;
+      }
+    }
+  }
+}
+
+@layer components {
+  .btn {
+    @apply p-2 border whitespace-nowrap bg-white border-gray-300 leading-4 text-sm rounded-md aria-pressed:text-blue-500 aria-pressed:bg-gray-100;
+  }
+
+  .navigator {
+    @apply flex text-sm text-gray-500  space-x-1;
+    button span {
+      @apply hover:underline hover:text-blue-500  underline-offset-4;
+    }
+  }
+
+  .selectedArea {
+    @apply m-4 cursor-pointer ring ring-offset-2 aria-selected:ring-indigo-200 ring-transparent hover:ring-gray-100;
+  }
+}
+
+.cities_group,
+.county_group,
+.village_group {
+  path {
+    @apply cursor-pointer stroke-white transition;
+  }
+}
+
+.mapWrap {
+  div {
+    @apply h-full w-full p-4 border border-gray-300 rounded-lg  flex flex-col;
+  }
+}
+
+#app {
+  @apply h-[100dvh] flex flex-col;
+}

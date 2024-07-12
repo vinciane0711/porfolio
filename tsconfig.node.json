@@ -1,0 +1,11 @@
+{
+  "extends": "@tsconfig/node18/tsconfig.json",
+  "include": ["vite.config.*", "vitest.config.*", "cypress.config.*", "nightwatch.conf.*", "playwright.config.*"],
+  "compilerOptions": {
+    "composite": true,
+    "module": "ESNext",
+    "resolveJsonModule": true,
+    "moduleResolution": "Bundler",
+    "types": ["node", "unplugin-icons/types/vue", "unplugin-icons/types/vue3"]
+  }
+}
