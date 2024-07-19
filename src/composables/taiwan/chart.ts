@@ -1,37 +1,39 @@
 import * as d3 from 'd3'
 
+const cityObj = [
+  '臺北市',
+  '新北市',
+  '桃園市',
+  '臺中市',
+  '臺南市',
+  '高雄市',
+  '基隆市',
+  '新竹市',
+  '新竹縣',
+  '苗栗縣',
+  '彰化縣',
+  '南投縣',
+  '雲林縣',
+  '嘉義市',
+  '嘉義縣',
+  '屏東縣',
+  '宜蘭縣',
+  '花蓮縣',
+  '臺東縣',
+  '澎湖縣',
+  '金門縣',
+  '連江縣',
+]
+
 const margin = { top: 30, right: 15, bottom: 0, left: 15 }
-const barSize = 60
-const n = 13
-const width = 400
+const barSize = 30
+const n = cityObj.length
+const width = 350
 const _h = barSize * n
 const height = _h + margin.top + margin.bottom
 const _w = width - margin.left - margin.right
 
-const cityObj = {
-  '63000': '臺北市',
-  '64000': '高雄市',
-  '65000': '新北市',
-  '66000': '臺中市',
-  '67000': '臺南市',
-  '68000': '桃園市',
-  '10002': '宜蘭縣',
-  '10004': '新竹縣',
-  '10005': '苗栗縣',
-  '10007': '彰化縣',
-  '10008': '南投縣',
-  '10009': '雲林縣',
-  '10010': '嘉義縣',
-  '10013': '屏東縣',
-  '10014': '臺東縣',
-  '10015': '花蓮縣',
-  '10016': '澎湖縣',
-  '10017': '基隆市',
-  '10018': '新竹市',
-  '10020': '嘉義市',
-  '09007': '連江縣',
-  '09020': '金門縣',
-}
+
 
 export const initChart = (func: (...arg: any) => void) => {
   const barChart = d3
@@ -42,9 +44,15 @@ export const initChart = (func: (...arg: any) => void) => {
     .attr('font-size', '1rem')
 
   const x = d3.scaleLinear().rangeRound([0, _w])
-  const y = d3.scaleBand().rangeRound([0, _h]).padding(0.2).domain(Object.keys(cityObj))
+  const y = d3
+    .scaleBand()
+    .rangeRound([0, _h])
+    .padding(0.2)
+    .domain(cityObj)
 
-  const contentWrap = barChart.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
+  const contentWrap = barChart
+    .append('g')
+    .attr('transform', `translate(${margin.left},${margin.top})`)
   const barsGroup = contentWrap.append('g')
   const textGroup = contentWrap.append('g')
   const valueGroup = contentWrap.append('g').attr('text-anchor', 'end')
@@ -55,14 +63,17 @@ export const initChart = (func: (...arg: any) => void) => {
     .attr('stroke', 'lightGray')
     .attr('stroke-dasharray', '4 3')
 
-  const cityLabelGroup = textGroup.selectAll('g').data(Object.keys(cityObj)).join('g')
+  const cityLabelGroup = textGroup
+    .selectAll('g')
+    .data(cityObj)
+    .join('g')
 
   cityLabelGroup
     .append('text')
     .attr('dy', '1.2rem')
     .attr('x', 0)
     .attr('y', (d) => y(d) as number)
-    .text((d) => cityObj[d as keyof typeof cityObj])
+    .text((d) => d)
 
   cityLabelGroup
     .append('rect')
@@ -74,7 +85,7 @@ export const initChart = (func: (...arg: any) => void) => {
     .attr('cursor', 'pointer')
     .attr('data-city', (d) => d)
     .on('click', (e, d) => {
-      func({ name: cityObj[d as keyof typeof cityObj], id: d })
+      func({ name: d, id: d })
     })
 
   function axis() {
@@ -90,7 +101,10 @@ export const initChart = (func: (...arg: any) => void) => {
     cityLabelGroup.select(`rect[data-city="${id}"]`).attr('stroke', 'gray')
   }
 
-  function updateChart(data: { code: string; value: number }[], range: [number, number]) {
+  function updateChart(
+    data: { code: string; value: number }[],
+    range: [number, number]
+  ) {
     x.domain(range)
     updateAxis()
 
@@ -114,14 +128,18 @@ export const initChart = (func: (...arg: any) => void) => {
             .attr('height', y.bandwidth())
             .attr('y', (d) => y(d.code) as number)
             .attr('x', (d) => xPo(d.value))
-            .attr('fill', (d) => (d.value > 0 ? 'var(--mainColor)' : 'var(--subColor)'))
+            .attr('fill', (d) =>
+              d.value > 0 ? 'var(--mainColor)' : 'var(--subColor)'
+            )
             .attr('width', (d) => widthFunc(d.value)),
         (update) =>
           update
             .transition()
             .duration(750)
             .attr('x', (d) => xPo(d.value))
-            .attr('fill', (d) => (d.value > 0 ? 'var(--mainColor)' : 'var(--subColor)'))
+            .attr('fill', (d) =>
+              d.value > 0 ? 'var(--mainColor)' : 'var(--subColor)'
+            )
             .attr('width', (d) => widthFunc(d.value))
       )
 

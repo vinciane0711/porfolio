@@ -35,12 +35,19 @@ const runInterval = () => {
       class="grow"
     />
     <datalist id="tickmarks">
-      <option v-for="y in periods.length" :value="y" :label="y.toString()"></option>
+      <option
+        v-for="y in periods.length"
+        :value="y"
+        :label="y.toString()"
+      ></option>
     </datalist>
 
-    <button class="bg-gray-200 p-0.5 w-6 h-6 rounded-full" @click="intervalId ? stopInterval() : runInterval()">
+    <button
+      class="bg-gray-200 p-0.5 w-6 h-6 rounded-full"
+      @click="intervalId ? stopInterval() : runInterval()"
+    >
       <span :class="intervalId ? 'icon-[mdi--pause]' : 'icon-[mdi--play]'" />
     </button>
-    <span class="min-w-[30px] text-center">{{ periods[cntYear!] }}</span>
+    <!-- <span class="min-w-[30px] text-center">{{ periods[cntYear!] }}</span> -->
   </div>
 </template>

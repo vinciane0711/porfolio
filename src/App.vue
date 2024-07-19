@@ -4,10 +4,8 @@ import { ref } from 'vue'
 </script>
 
 <template>
-  <div class="border border-b-gray-300 py-4 px-8 flex gap-2">
+  <div class="border border-b-gray-300 p-4 flex gap-2">
     <router-link to="/">Home</router-link>
-    <router-link to="/map">Map</router-link>
-    <router-link to="/taiwan">Taiwan</router-link>
     <router-link to="/north-population">North-pop</router-link>
   </div>
 
