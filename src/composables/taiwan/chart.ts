@@ -33,8 +33,6 @@ const _h = barSize * n
 const height = _h + margin.top + margin.bottom
 const _w = width - margin.left - margin.right
 
-
-
 export const initChart = (func: (...arg: any) => void) => {
   const barChart = d3
     .select('#chart')
@@ -44,11 +42,7 @@ export const initChart = (func: (...arg: any) => void) => {
     .attr('font-size', '1rem')
 
   const x = d3.scaleLinear().rangeRound([0, _w])
-  const y = d3
-    .scaleBand()
-    .rangeRound([0, _h])
-    .padding(0.2)
-    .domain(cityObj)
+  const y = d3.scaleBand().rangeRound([0, _h]).padding(0.2).domain(cityObj)
 
   const contentWrap = barChart
     .append('g')
@@ -63,10 +57,7 @@ export const initChart = (func: (...arg: any) => void) => {
     .attr('stroke', 'lightGray')
     .attr('stroke-dasharray', '4 3')
 
-  const cityLabelGroup = textGroup
-    .selectAll('g')
-    .data(cityObj)
-    .join('g')
+  const cityLabelGroup = textGroup.selectAll('g').data(cityObj).join('g')
 
   cityLabelGroup
     .append('text')
@@ -77,16 +68,14 @@ export const initChart = (func: (...arg: any) => void) => {
 
   cityLabelGroup
     .append('rect')
-    .attr('x', -5)
-    .attr('y', (d) => (y(d) as number) - 2)
-    .attr('height', y.bandwidth() + 4)
-    .attr('width', _w + 10)
+    .attr('x', 0)
+    .attr('y', (d) => (y(d) as number) + 2)
+    .attr('height', y.bandwidth() + 2)
+    .attr('width', _w - 2)
     .attr('fill', 'transparent')
     .attr('cursor', 'pointer')
     .attr('data-city', (d) => d)
-    .on('click', (e, d) => {
-      func({ name: d, id: d })
-    })
+    .on('click', (e, d) => func(d))
 
   function axis() {
     const g = contentWrap.append('g')
@@ -101,62 +90,65 @@ export const initChart = (func: (...arg: any) => void) => {
     cityLabelGroup.select(`rect[data-city="${id}"]`).attr('stroke', 'gray')
   }
 
-  function updateChart(
-    data: { code: string; value: number }[],
-    range: [number, number]
-  ) {
+  let xPo = (d: number) => x(0)
+  let widthFunc = (d: number) => {
+    return _w
+  }
+
+  function updateRange(range: [number, number]) {
     x.domain(range)
     updateAxis()
-
     zeroLine.transition().attr('x1', x(0)).attr('x2', x(0))
 
-    const xPo = (d: number) => (d > 0 ? x(0) : x(d) < 0 ? 0 : x(d))
-    const widthFunc = (d: number) => {
+    xPo = (d: number) => (d > 0 ? x(0) : x(d) < 0 ? 0 : x(d))
+    widthFunc = (d: number) => {
       const w = range.includes(0) ? _w : _w / 2
       const diff = Math.abs(x(d) - x(0))
       return diff >= w ? w : diff
     }
+  }
 
+  function updateChart(data: { [city: string]: number }) {
     barsGroup
       .selectAll('rect')
-      .data(data)
+      .data(cityObj)
       .join(
         (enter) =>
           enter
             .append('rect')
             .attr('opacity', 0.2)
             .attr('height', y.bandwidth())
-            .attr('y', (d) => y(d.code) as number)
-            .attr('x', (d) => xPo(d.value))
+            .attr('y', (d) => y(d) as number)
+            .attr('x', (d) => xPo(data[d]))
             .attr('fill', (d) =>
-              d.value > 0 ? 'var(--mainColor)' : 'var(--subColor)'
+              data[d] > 0 ? 'var(--mainColor)' : 'var(--subColor)'
             )
-            .attr('width', (d) => widthFunc(d.value)),
+            .attr('width', (d) => widthFunc(data[d])),
         (update) =>
           update
             .transition()
             .duration(750)
-            .attr('x', (d) => xPo(d.value))
+            .attr('x', (d) => xPo(data[d]))
             .attr('fill', (d) =>
-              d.value > 0 ? 'var(--mainColor)' : 'var(--subColor)'
+              data[d] > 0 ? 'var(--mainColor)' : 'var(--subColor)'
             )
-            .attr('width', (d) => widthFunc(d.value))
+            .attr('width', (d) => widthFunc(data[d]))
       )
 
     valueGroup
       .selectAll('text')
-      .data(data)
+      .data(cityObj)
       .join(
         (enter) =>
           enter
             .append('text')
             .attr('dy', '1.2rem')
             .attr('x', _w - 5)
-            .attr('y', (d) => y(d.code) as number)
-            .text((d) => d.value.toLocaleString()),
-        (update) => update.text((d) => d.value.toLocaleString())
+            .attr('y', (d) => y(d) as number)
+            .text((d) => data[d].toLocaleString()),
+        (update) => update.text((d) => data[d].toLocaleString())
       )
   }
 
-  return { updateChart, selectCity }
+  return { updateRange, updateChart, selectCity }
 }

@@ -27,7 +27,7 @@ export const views: Record<
     range: [
       [-25000, 25000],
       [-25000, 25000],
-      [-25000, 25000],
+      [-50000, 50000],
     ],
   },
   NATIVE: {
@@ -38,7 +38,7 @@ export const views: Record<
     range: [
       [0, 30000],
       [-30000, 0],
-      [-25000, 25000],
+      [-20000, 20000],
     ],
   },
   SOCIAL: {
@@ -49,7 +49,7 @@ export const views: Record<
     range: [
       [0, 200000],
       [-200000, 0],
-      [-25000, 25000],
+      [-50000, 50000],
     ],
   },
 }
@@ -82,6 +82,7 @@ const admin_code = {
 export type DiffType = 'POP' | 'NATIVE' | 'SOCIAL'
 
 export interface IBaseType {
+  city: string
   birth: number
   death: number
   moveIn: number
@@ -94,9 +95,7 @@ export interface ICityData {
 }
 
 interface ISumData {
-  [city: string]: {
-    [year: string]: IBaseType
-  }
+  [year: string]: IBaseType[]
 }
 
 export function diffFunc(type: DiffType, obj: IBaseType) {
@@ -107,14 +106,15 @@ export function diffFunc(type: DiffType, obj: IBaseType) {
 
   switch (type) {
     case 'NATIVE':
-      return [birth, death, nativeDiff]
+      return [birth, -death, nativeDiff]
     case 'SOCIAL':
-      return [moveIn, moveOut, socialDiff]
+      return [moveIn, -moveOut, socialDiff]
     case 'POP':
       return [nativeDiff, socialDiff, popDiff]
   }
 }
 
+// TODO: fetch data from google sheet
 export const sumData: ISumData = await Promise.all(
   ['birth', 'death', 'moveIn', 'moveOut'].map((k) =>
     csvConvertor(`./data/${k}.csv`)
@@ -122,21 +122,24 @@ export const sumData: ISumData = await Promise.all(
 ).then((res) => {
   const [birth, death, moveIn, moveOut] = res
   const years = birth[0]
-  return birth.reduce((sum: any, row, i) => {
-    if (i === 0) return {}
-    const city = birth[i][0]
-    sum[city] = years.reduce((acc: any, year, j) => {
-      if (j === 0) return {}
-      acc[year] = {
-        birth: +birth[i][j],
-        death: +death[i][j],
-        moveIn: +moveIn[i][j],
-        moveOut: +moveOut[i][j],
-      }
-      return acc
-    }, {})
-    return sum
-  }, {})
+  const cities = birth.length
+  const result: ISumData = {}
+
+  for (let i = 1; i < years.length; i++) {
+    result[years[i]] = []
+    for (let j = 1; j < cities; j++) {
+      const city = birth[j][0]
+      result[years[i]].push({
+        city,
+        birth: +birth[j][i],
+        death: +death[j][i],
+        moveIn: +moveIn[j][i],
+        moveOut: +moveOut[j][i],
+      })
+    }
+  }
+
+  return result
 })
 
 export const initMap = (func: (...arg: any) => void) => {
@@ -177,9 +180,8 @@ export const initMap = (func: (...arg: any) => void) => {
     )
     .on('mouseout', () => tooltip.style('opacity', 0))
     .on('click', (e, d) => {
-      const id = d.properties!.name_zh as string
       const name = d.properties!.name_zh as string
-      func({ name, id })
+      func(name)
       e.stopPropagation()
     })
 
@@ -195,20 +197,17 @@ export const initMap = (func: (...arg: any) => void) => {
   // const legendWrap = svg.append('g').attr('transform', `translate(${width - 200},${height - 80})`)
   // createLegend(legendWrap, colorFunc, { title: '單位（人)', width: 200, tickFormat: '~s' })
 
-  function updateColor(
-    type: DiffType,
-    cntYear: number,
-    colorFunc: d3.ScaleLinear<string, string, any>
-  ) {
+  const colorFunc = d3.scaleLinear(
+    [-25000, 0, 25000],
+    ['blue', 'white', 'orange']
+  )
+
+  function updateColor(data: { [city: string]: number }) {
     cityGroup
       .selectAll('path')
       .transition()
       .duration(750)
-      .attr('fill', (d: any) => {
-        const id = d.properties.name_zh as string
-        const cntValue = sumData[id][cntYear]
-        return colorFunc(diffFunc(type, cntValue)[2])
-      })
+      .attr('fill', (d: any) => colorFunc(data[d.properties.name_zh]))
   }
 
   return { updateColor, selectCity }

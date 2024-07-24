@@ -7,12 +7,14 @@ import {
   type ICsvObj,
 } from '@/composables/taiwan/multiLine'
 import { numWithCommas } from '@/composables'
+import IconButton from '@/components/IconButton.vue'
 
 const props = defineProps<{
   title: string
   file: string | ICsvObj<number>
   cntYear: number
   index: number
+  viewIndex: number
   colors?: string[]
 }>()
 const el = ref<HTMLElement>()
@@ -54,9 +56,9 @@ onMounted(() => {
   <div
     class="p-4 rounded-lg flex gap-2 flex-col w-[400px] border transition bg-white border-gray-300"
   >
-    <div class="flex items-center">
+    <div class="flex items-center justify-between">
       <h3 class="font-bold text-lg">{{ title }}</h3>
-      <p class="ml-auto text-sm"></p>
+      <span class="icon-[mdi--table] text-xl"></span>
     </div>
 
     <svg ref="el" :viewBox="`0, 0, ${conf.w}, ${conf.h}`">
@@ -68,6 +70,7 @@ onMounted(() => {
           v-for="(r, i) in rest"
           fill="none"
           :stroke="palette[i]"
+          :opacity="viewIndex !== i ? 0.3 : 1"
           :d="`${line(transposeFunc(r))}`"
         />
         <path
@@ -80,6 +83,7 @@ onMounted(() => {
           v-if="!colors"
           v-for="(r, i) in rest"
           :fill="`url(#grad${[i + 1]})`"
+          :opacity="viewIndex !== i ? 0.3 : 1"
           :d="`${area(transposeFunc(r))}`"
         />
       </g>

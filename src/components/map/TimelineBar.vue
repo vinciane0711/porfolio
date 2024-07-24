@@ -23,7 +23,7 @@ const runInterval = () => {
 </script>
 
 <template>
-  <div class="flex w-full h-max gap-2">
+  <div class="flex w-full h-max gap-2 items-center">
     <input
       type="range"
       name="temp"
@@ -32,7 +32,7 @@ const runInterval = () => {
       :min="0"
       :max="periods.length - 1"
       v-model.number="cntYear"
-      class="grow"
+      class="grow slider"
     />
     <datalist id="tickmarks">
       <option
@@ -51,3 +51,4 @@ const runInterval = () => {
     <!-- <span class="min-w-[30px] text-center">{{ periods[cntYear!] }}</span> -->
   </div>
 </template>
+

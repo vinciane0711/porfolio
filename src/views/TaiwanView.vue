@@ -16,13 +16,12 @@ import Chart from '@/components/MultiLineChart.vue'
 import TimelineBar from '@/components/map/TimelineBar.vue'
 
 const years = Array.from({ length: 14 }).map((y, i) => i + 99)
-const cntYear = ref(0)
+const cntYearIndex = ref(0)
+const cntYear = computed(() => years[cntYearIndex.value])
 const cntView = ref<DiffType>('POP')
 const cntViewIndex = ref(2)
-const cntCityData = ref<ICityData>()
+const cntCityData = ref('')
 const renderCom = ref(true)
-const max = 25000
-const min = -25000
 
 const forceRender = async () => {
   renderCom.value = false
@@ -31,72 +30,70 @@ const forceRender = async () => {
 }
 
 const cityData = computed(() => {
-  if (!cntCityData.value?.id) return
+  if (!cntCityData.value) return
   forceRender()
-  return Object.values(sumData[cntCityData.value.id]).reduce(
-    (acc, cnt) => {
-      const d = diffFunc(cntView.value, cnt)
-      acc.rows[1].push(d[0])
-      acc.rows[2].push(d[1])
-      acc.rows[3].push(d[2])
-      return acc
-    },
-    {
-      keys: ['year', ...views[cntView.value].cols, views[cntView.value].title],
-      rows: [years, [], [], []],
-    } as ICsvObj<number>
-  )
+  const rows = [years, [], [], []]
+
+  Object.values(sumData).forEach((yearData) => {
+    const city = yearData.find((c) => c.city === cntCityData.value)!
+    const d = diffFunc(cntView.value, city)
+    rows[1].push(d[0])
+    rows[2].push(Math.abs(d[1]))
+    rows[3].push(d[2])
+  })
+
+  return {
+    keys: ['year', ...views[cntView.value].cols, views[cntView.value].title],
+    rows,
+  } as ICsvObj<number>
 })
 
 const barChartData = computed(() => {
-  const obj: { [year: string]: { code: string; value: number }[] } = {}
-  for (const c in sumData) {
-    const _city = sumData[c]
-    for (const y in _city) {
-      const negative =
-        (cntView.value !== 'POP' && cntViewIndex.value === 1 && -1) || 1
-      const _v = {
-        code: c,
-        value: diffFunc(cntView.value, _city[y])[cntViewIndex.value] * negative,
-      }
-      obj[y] ? obj[y].push(_v) : (obj[y] = [_v])
-    }
-  }
-  return obj
+  return Object.keys(sumData).reduce(
+    (acc: { [year: string]: { [city: string]: number } }, year) => {
+      acc[year] = sumData[year].reduce((a, c) => {
+        a[c.city] = diffFunc(cntView.value, c)[cntViewIndex.value]
+        return a
+      }, {} as { [city: string]: number })
+      return acc
+    },
+    {}
+  )[cntYear.value]
 })
 
 const dynamicRange = computed(
   () => views[cntView.value].range[cntViewIndex.value]
 )
-const colorFunc = d3.scaleLinear([min, 0, max], ['blue', 'white', 'orange'])
 
 onMounted(() => {
   const { updateColor, selectCity: mapCity } = initMap(
     (obj) => (cntCityData.value = obj)
   )
-  const { updateChart, selectCity: chartCity } = initChart(
-    (obj) => (cntCityData.value = obj)
-  )
+  const {
+    updateRange,
+    updateChart,
+    selectCity: chartCity,
+  } = initChart((obj) => (cntCityData.value = obj))
 
   watch(
-    [cntView, cntYear],
+    [cntView, cntViewIndex],
     () => {
-      const y = years[cntYear.value]
-      updateColor(cntView.value, y, colorFunc)
-      updateChart(barChartData.value[y], dynamicRange.value)
+      updateRange(dynamicRange.value)
+      updateChart(barChartData.value)
+      updateColor(barChartData.value)
     },
     { immediate: true }
   )
 
-  watch(cntViewIndex, () => {
-    const y = years[cntYear.value]
-    updateChart(barChartData.value[y], dynamicRange.value)
+  watch(cntYear, () => {
+    updateColor(barChartData.value)
+    updateChart(barChartData.value)
   })
 
   watch(cntCityData, () => {
     if (!cntCityData.value) return
-    mapCity(cntCityData.value.name)
-    chartCity(cntCityData.value.id)
+    mapCity(cntCityData.value)
+    chartCity(cntCityData.value)
   })
 })
 </script>
@@ -109,11 +106,11 @@ onMounted(() => {
           <h1 class="text-[28px] font-bold">
             全台人口變化圖
             <span class="w-16 inline-block text-center">
-              {{ years[cntYear] }}
+              {{ cntYear }}
             </span>
           </h1>
         </div>
-        <TimelineBar :periods="years" v-model:value="cntYear" />
+        <TimelineBar :periods="years" v-model:value="cntYearIndex" />
 
         <div class="flex items-center">
           <select
@@ -146,22 +143,23 @@ onMounted(() => {
             v-for="(v, i) in views"
             title="全台灣"
             :file="`./data/${v.path}.csv`"
-            :cnt-year="years[cntYear]"
+            :cntYear="cntYear"
             :index="3"
+            :viewIndex="cntViewIndex"
             :colors="v.colors"
             :style="{ display: cntView === i ? 'flex' : 'none' }"
-            @changeYear="(n:number)=>{cntYear=n; cntView = i}"
+            @changeYear="(n:number)=>cntYearIndex=n"
           />
         </Suspense>
-
         <Suspense v-if="renderCom && cntCityData">
           <Chart
-            :title="cntCityData.name"
+            :title="cntCityData"
             :file="cityData!"
             :index="3"
-            :cnt-year="years[cntYear]"
+            :cntYear="cntYear"
+            :viewIndex="cntViewIndex"
             :colors="views[cntView].colors"
-            @changeYear="(n:number)=>cntYear=n"
+            @changeYear="(n:number)=>cntYearIndex=n"
           />
         </Suspense>
       </div>
@@ -195,12 +193,12 @@ onMounted(() => {
         </defs>
       </svg>
 
-      <div class="flex flex-col gap-4 overflow-scroll">
-        <div class="w-[350px] h-max rounded-lg p-4 bg-white">
-          <h3 class="font-bold text-lg mb-2">各縣市資料</h3>
-          <!-- BAR CHART -->
-          <svg id="chart"></svg>
-        </div>
+      <div
+        class="flex flex-col gap-4 overflow-y-scroll p-4 min-w-[350px] border border-l-gray-300"
+      >
+        <h3 class="font-bold text-lg">各縣市資料</h3>
+        <!-- BAR CHART -->
+        <svg id="chart"></svg>
       </div>
     </MapLayout>
   </main>
