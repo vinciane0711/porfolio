@@ -26,29 +26,84 @@ const runInterval = () => {
   <div class="flex w-full h-max gap-2 items-center">
     <input
       type="range"
-      name="temp"
+      name="slider"
       list="tickmarks"
       :step="1"
       :min="0"
       :max="periods.length - 1"
       v-model.number="cntYear"
-      class="grow slider"
+      class="grow text-indigo-500"
     />
-    <datalist id="tickmarks">
+    <!-- <datalist id="tickmarks">
       <option
         v-for="y in periods.length"
         :value="y"
         :label="y.toString()"
       ></option>
-    </datalist>
+    </datalist> -->
 
     <button
-      class="bg-gray-200 p-0.5 w-6 h-6 rounded-full"
+      class="bg-gray-200 rounded-full flex w-6 h-6"
       @click="intervalId ? stopInterval() : runInterval()"
     >
-      <span :class="intervalId ? 'icon-[mdi--pause]' : 'icon-[mdi--play]'" />
+      <span
+        class="m-auto"
+        :class="intervalId ? 'icon-[mdi--pause]' : 'icon-[mdi--play]'"
+      />
     </button>
     <!-- <span class="min-w-[30px] text-center">{{ periods[cntYear!] }}</span> -->
   </div>
 </template>
+<style>
+/* ref: https://codepen.io/t_afif/pen/KKGpmGE?editors=1100 */
 
+input {
+  --c: orange; /* active color */
+  --g: 4px; /* the gap */
+  --l: 6px; /* line thickness*/
+  --s: 22px; /* thumb size*/
+
+  width: 100%;
+  height: var(--s); /* needed for Firefox*/
+  --_c: color-mix(in srgb, var(--c), #000 var(--p, 0%));
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  /* background: none; */
+  cursor: pointer;
+  overflow: hidden;
+}
+/* input:focus-visible,
+input:hover {
+  --p: 25%;
+} */
+input:active,
+input:focus-visible {
+  --_b: var(--s);
+}
+/* chromium */
+input[type='range']::-webkit-slider-thumb {
+  height: var(--s);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  box-shadow: 0 0 0 var(--_b, var(--l)) inset var(--_c);
+  border-image: linear-gradient(90deg, var(--_c) 50%, #ababab 0) 0 1 /
+    calc(50% - var(--l) / 2) 100vw/0 calc(100vw + var(--g));
+  -webkit-appearance: none;
+  appearance: none;
+  transition: 0.3s;
+}
+/* Firefox */
+input[type='range']::-moz-range-thumb {
+  height: var(--s);
+  width: var(--s);
+  background: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 var(--_b, var(--l)) inset var(--_c);
+  border-image: linear-gradient(90deg, var(--_c) 50%, #ababab 0) 0 1 /
+    calc(50% - var(--l) / 2) 100vw/0 calc(100vw + var(--g));
+  -moz-appearance: none;
+  appearance: none;
+  transition: 0.3s;
+}
+</style>

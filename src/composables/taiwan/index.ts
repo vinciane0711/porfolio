@@ -15,15 +15,15 @@ export const views: Record<
     title: string
     cols: string[]
     path: string
-    colors: string[] | undefined
+    // colors: string[] | undefined
     range: [[number, number], [number, number], [number, number]]
   }
 > = {
   POP: {
     title: '人口增加',
-    cols: ['自然增加', '社會增加'],
+    cols: ['自然增加', '社會增加', '增加數', '增加率'],
     path: 'popIncrement',
-    colors: ['skyBlue', 'lightGreen', 'gray'],
+    // colors: ['skyBlue', 'lightGreen', 'lightGray', 'lightGray'],
     range: [
       [-25000, 25000],
       [-25000, 25000],
@@ -32,9 +32,9 @@ export const views: Record<
   },
   NATIVE: {
     title: '自然增加',
-    cols: ['出生人數', '死亡人數'],
+    cols: ['出生人數', '死亡人數', '增加數', '增加率'],
     path: 'nativeIncrement',
-    colors: undefined,
+    // colors: undefined,
     range: [
       [0, 30000],
       [-30000, 0],
@@ -43,9 +43,9 @@ export const views: Record<
   },
   SOCIAL: {
     title: '社會增加',
-    cols: ['遷入人數', '遷出人數'],
+    cols: ['遷入人數', '遷出人數', '增加數', '增加率'],
     path: 'socialIncrement',
-    colors: undefined,
+    // colors: undefined,
     range: [
       [0, 200000],
       [-200000, 0],
@@ -85,8 +85,11 @@ export interface IBaseType {
   city: string
   birth: number
   death: number
+  nativeRate: number
   moveIn: number
   moveOut: number
+  socialRate: number
+  popRate: number
 }
 
 export interface ICityData {
@@ -99,28 +102,34 @@ interface ISumData {
 }
 
 export function diffFunc(type: DiffType, obj: IBaseType) {
-  const { birth, death, moveIn, moveOut } = obj
+  const { birth, death, moveIn, moveOut, socialRate, nativeRate, popRate } = obj
   const nativeDiff = birth - death
   const socialDiff = moveIn - moveOut
   const popDiff = nativeDiff + socialDiff
 
   switch (type) {
     case 'NATIVE':
-      return [birth, -death, nativeDiff]
+      return [birth, death, nativeDiff, nativeRate]
     case 'SOCIAL':
-      return [moveIn, -moveOut, socialDiff]
+      return [moveIn, moveOut, socialDiff, socialRate]
     case 'POP':
-      return [nativeDiff, socialDiff, popDiff]
+      return [nativeDiff, socialDiff, popDiff, popRate]
   }
 }
 
 // TODO: fetch data from google sheet
 export const sumData: ISumData = await Promise.all(
-  ['birth', 'death', 'moveIn', 'moveOut'].map((k) =>
-    csvConvertor(`./data/${k}.csv`)
-  )
+  [
+    'birth',
+    'death',
+    'moveIn',
+    'moveOut',
+    'nativeRate',
+    'socialRate',
+    'popRate',
+  ].map((k) => csvConvertor(`./data/${k}.csv`))
 ).then((res) => {
-  const [birth, death, moveIn, moveOut] = res
+  const [birth, death, moveIn, moveOut, nativeRate, socialRate, popRate] = res
   const years = birth[0]
   const cities = birth.length
   const result: ISumData = {}
@@ -133,8 +142,11 @@ export const sumData: ISumData = await Promise.all(
         city,
         birth: +birth[j][i],
         death: +death[j][i],
+        nativeRate: +nativeRate[j][i],
         moveIn: +moveIn[j][i],
         moveOut: +moveOut[j][i],
+        socialRate: +socialRate[j][i],
+        popRate: +popRate[j][i],
       })
     }
   }
@@ -202,6 +214,17 @@ export const initMap = (func: (...arg: any) => void) => {
     ['blue', 'white', 'orange']
   )
 
+  function updateMapRange(range: [number, number]) {
+    const [min, max] = range
+    if (min === 0) {
+      colorFunc.domain(range).range(['white', 'orange'])
+    } else if (max === 0) {
+      colorFunc.domain(range).range(['blue', 'white'])
+    } else {
+      colorFunc.domain([min, 0, max]).range(['blue', 'white', 'orange'])
+    }
+  }
+
   function updateColor(data: { [city: string]: number }) {
     cityGroup
       .selectAll('path')
@@ -210,5 +233,5 @@ export const initMap = (func: (...arg: any) => void) => {
       .attr('fill', (d: any) => colorFunc(data[d.properties.name_zh]))
   }
 
-  return { updateColor, selectCity }
+  return { updateMapRange, updateColor, selectCity }
 }

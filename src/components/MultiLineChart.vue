@@ -7,18 +7,20 @@ import {
   type ICsvObj,
 } from '@/composables/taiwan/multiLine'
 import { numWithCommas } from '@/composables'
-import IconButton from '@/components/IconButton.vue'
 
 const props = defineProps<{
   title: string
   file: string | ICsvObj<number>
   cntYear: number
-  index: number
   viewIndex: number
-  colors?: string[]
 }>()
 const el = ref<HTMLElement>()
-const palette = props.colors || ['var(--mainColor)', 'var(--subColor)', 'gray']
+const palette = [
+  'var(--mainColor)',
+  'var(--subColor)',
+  'lightGray',
+  'lightGray',
+]
 const data =
   typeof props.file === 'string' ? await csvConvertor(props.file) : props.file
 
@@ -26,15 +28,16 @@ const {
   keys,
   years,
   rest,
-  rates,
+  rate,
+  total,
   line,
   line2,
   area,
   transposeFunc,
   drawDetail,
-} = initChart(data, props.index)
+} = initChart(data)
 const yearIndex = computed(() => years.findIndex((i) => i === props.cntYear))
-const emit = defineEmits(['changeYear'])
+const emit = defineEmits(['changeYear', 'changeViewIndex'])
 
 onMounted(() => {
   if (!el.value) return
@@ -73,19 +76,19 @@ onMounted(() => {
           :opacity="viewIndex !== i ? 0.3 : 1"
           :d="`${line(transposeFunc(r))}`"
         />
-        <path
+        <!-- <path
           fill="none"
           :stroke="palette[2]"
           stroke-dasharray="4 3"
-          :d="`${line2(transposeFunc(rates))}`"
-        />
+          :d="`${line2(transposeFunc(rate))}`"
+        /> -->
         <path
-          v-if="!colors"
           v-for="(r, i) in rest"
-          :fill="`url(#grad${[i + 1]})`"
+          fill="none"
           :opacity="viewIndex !== i ? 0.3 : 1"
           :d="`${area(transposeFunc(r))}`"
         />
+        <!-- :fill="`url(#grad${[i + 1]})`" -->
       </g>
 
       <line
@@ -125,8 +128,13 @@ onMounted(() => {
     </svg>
 
     <!-- legends & cntValues -->
-    <div class="grid grid-cols-3 gap-2 text-sm px-10">
-      <div v-for="(l, i) in keys">
+    <div class="grid grid-cols-4 gap-2 text-sm px-4">
+      <div
+        v-for="(l, i) in keys"
+        @click="emit('changeViewIndex', i)"
+        class="cursor-pointer"
+      >
+        <!-- :style="{ opacity: viewIndex !== i ? 0.3 : 1 }" -->
         <div class="flex items-center justify-center text-xs">
           <span
             class="w-2 h-2 rounded-full mr-2"
@@ -138,7 +146,7 @@ onMounted(() => {
           {{
             rest[i]
               ? numWithCommas(rest[i][yearIndex])
-              : numWithCommas(rates[yearIndex])
+              : numWithCommas(rate[yearIndex])
           }}
         </p>
       </div>

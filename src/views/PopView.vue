@@ -9,6 +9,7 @@ import { useStore } from '@/stores/main'
 import TimelineBar from '@/components/map/TimelineBar.vue'
 import airportLine from '@/assets/data/metro/metro-airport.json'
 import greenLine from '@/assets/data/metro/metro-green.json'
+import MapLayout from '@/layouts/MapLayout.vue'
 
 const store = useStore()
 const periods = ref<string[]>()
@@ -58,20 +59,19 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="h-full overflow-hidden flex flex-col">
-    <div class="border border-gray-300 h-full flex flex-col">
-      <TimelineBar
-        v-if="periods"
-        class="p-4"
-        :periods="periods"
-        v-model:value="cntYear"
-      />
+  <MapLayout class="flex-col">
+    <TimelineBar
+      v-if="periods"
+      class="p-4"
+      :periods="periods"
+      v-model:value="cntYear"
+    />
 
-      <!-- <svg ref="barChart" stroke-linejoin="round" font-size="0.75rem"></svg> -->
-      <!-- <svg ref="multiline"></svg> -->
+    <!-- <svg ref="barChart" stroke-linejoin="round" font-size="0.75rem"></svg> -->
+    <!-- <svg ref="multiline"></svg> -->
 
-      <!-- legends & cntValues -->
-      <!-- <ul class="grid grid-flow-row grid-cols-4 gap-2 text-sm group" @mouseleave="() => (hoverIndex = undefined)">
+    <!-- legends & cntValues -->
+    <!-- <ul class="grid grid-flow-row grid-cols-4 gap-2 text-sm group" @mouseleave="() => (hoverIndex = undefined)">
           <li
             v-for="(r, i) in values"
             class="group-hover:opacity-30 transition hover:!opacity-100 cursor-default"
@@ -87,17 +87,16 @@ onMounted(async () => {
           </li>
         </ul> -->
 
-      <!-- MAIN MAP -->
-      <svg ref="map" class="max-w-full max-h-full m-auto">
-        <g
-          v-for="l in mapStyle"
-          :class="l.class"
-          :fill="l.fill"
-          :stroke="l.color"
-          :stroke-opacity="l.opacity"
-          :stroke-width="l.width"
-        />
-      </svg>
-    </div>
-  </main>
+    <!-- MAIN MAP -->
+    <svg ref="map" class="max-w-full max-h-full m-auto">
+      <g
+        v-for="l in mapStyle"
+        :class="l.class"
+        :fill="l.fill"
+        :stroke="l.color"
+        :stroke-opacity="l.opacity"
+        :stroke-width="l.width"
+      />
+    </svg>
+  </MapLayout>
 </template>

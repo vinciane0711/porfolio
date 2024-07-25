@@ -32,20 +32,31 @@ export const csvConvertor = async (path: string) => {
   })
 }
 
-export const initChart = (data: ICsvObj<number>, index: number) => {
+export const initChart = (data: ICsvObj<number>) => {
   const copy = JSON.parse(JSON.stringify(data)) as ICsvObj<number>
   const { keys, rows } = copy
   const [years, ...rest] = rows
-  const rates = rest.splice(index - 1, 1)[0]
+  const rate = rest.splice(rest.length - 1, 1)[0]
+  const total = rest.splice(rest.length - 1, 1)[0]
 
   // remove key="year"
   keys.shift()
-  keys.push(keys.splice(index - 1, 1)[0])
+  // keys.push(keys.splice(index - 1, 1)[0])
 
   const numRange = d3.extent(rest.flat()) as number[]
-  const x = d3.scaleLinear(d3.extent(years) as number[], [conf.mx, conf.w - conf.mx])
+  const x = d3.scaleLinear(d3.extent(years) as number[], [
+    conf.mx,
+    conf.w - conf.mx,
+  ])
   const y = d3.scaleLinear(numRange, [conf.h - conf.mb, conf.mt])
-  const y2 = d3.scaleLinear(d3.extent(rates) as number[], [conf.h - conf.mb, conf.mt])
+  const y2 = d3.scaleLinear(d3.extent(rate) as number[], [
+    conf.h - conf.mb,
+    conf.mt,
+  ])
+  const y3 = d3.scaleLinear(d3.extent(total) as number[], [
+    conf.h - conf.mb,
+    conf.mt,
+  ])
 
   const line = d3.line(
     (d) => x(d[0]),
@@ -56,6 +67,12 @@ export const initChart = (data: ICsvObj<number>, index: number) => {
     (d) => x(d[0]),
     (d) => y2(d[1])
   )
+
+  const line3 = d3.line(
+    (d) => x(d[0]),
+    (d) => y3(d[1])
+  )
+
 
   const area = d3
     .area()
@@ -94,32 +111,29 @@ export const initChart = (data: ICsvObj<number>, index: number) => {
       .call((g) => g.select('.domain').remove())
       .call((g) => g.append('text').attr('x', -conf.mx).attr('y', 10))
 
-    if (y2) {
-      svg
-        .select('.y-axis2')
-        .call(
-          d3.axisRight(y2).ticks(conf.h / 40, '~s')
-          // .tickFormat(d3.format('.' + d3.precisionFixed(1) + '%'))
-        )
-        .call((g) => g.select('.domain').remove())
-        .call((g) => g.selectAll('.tick line').attr('stroke-opacity', '0.3'))
-        .call((g) => g.append('text').attr('x', -conf.mx).attr('y', 10))
+    svg
+      .select('.y-axis2')
+      .call(
+        d3.axisRight(y3).ticks(conf.h / 40, '~s')
+        // .tickFormat(d3.format('.' + d3.precisionFixed(1) + '%'))
+      )
+      .call((g) => g.select('.domain').remove())
+      .call((g) => g.selectAll('.tick line').attr('stroke-opacity', '0.3'))
+      .call((g) => g.append('text').attr('x', -conf.mx).attr('y', 10))
 
-      // divider for separating positive & negative value
-
-      const zeroPo = y2(0)
-      if (zeroPo > 0 && zeroPo < conf.h - conf.mt - conf.mb) {
-        svg
-          .select('.y-axis2')
-          .append('line')
-          .attr('stroke', 'red')
-          .attr('stroke-opacity', 0.3)
-          .attr('x1', 0)
-          .attr('x2', -(conf.w - conf.mx * 2))
-          .attr('y1', zeroPo)
-          .attr('y2', zeroPo)
-      }
-    }
+    // divider for separating positive & negative value
+    // const zeroPo = y2(0)
+    // if (zeroPo > 0 && zeroPo < conf.h - conf.mt - conf.mb) {
+    //   svg
+    //     .select('.y-axis2')
+    //     .append('line')
+    //     .attr('stroke', 'red')
+    //     .attr('stroke-opacity', 0.3)
+    //     .attr('x1', 0)
+    //     .attr('x2', -(conf.w - conf.mx * 2))
+    //     .attr('y1', zeroPo)
+    //     .attr('y2', zeroPo)
+    // }
   }
 
   const detectXPo = (e: MouseEvent, f: (d: number) => void) => {
@@ -136,7 +150,8 @@ export const initChart = (data: ICsvObj<number>, index: number) => {
 
   const overlayFunc = (svg: SvgSelection, func: any) => {
     const focusLine = svg.select('.line')
-    const moveFunc = (d: number) => focusLine.attr('transform', `translate(${x(d)}, 0)`)
+    const moveFunc = (d: number) =>
+      focusLine.attr('transform', `translate(${x(d)}, 0)`)
     const clickFunc = (d: number) => {
       const i = years.findIndex((y) => y === d)
       func(i)
@@ -160,8 +175,10 @@ export const initChart = (data: ICsvObj<number>, index: number) => {
     function updateFocus(i: number) {
       const xPo = x(years[i])
       const _r = Object.values(rest).map((m) => y(m[i]))
-      const a = y2(rates[i])
+      const a = y2(rate[i])
+      const b = y3(total[i])
       _r.push(a)
+      _r.push(b)
 
       const focus = svg.select('.focus')
       const circles = focus.selectAll('circle')
@@ -187,7 +204,8 @@ export const initChart = (data: ICsvObj<number>, index: number) => {
     keys,
     years,
     rest,
-    rates,
+    rate,
+    total,
     line,
     line2,
     area,
