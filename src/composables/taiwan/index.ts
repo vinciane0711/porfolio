@@ -21,7 +21,7 @@ export const views: Record<
 > = {
   POP: {
     title: '人口增加',
-    cols: ['自然增加', '社會增加', '增加數', '增加率'],
+    cols: ['自然增加', '社會增加'],
     path: 'popIncrement',
     // colors: ['skyBlue', 'lightGreen', 'lightGray', 'lightGray'],
     range: [
@@ -32,7 +32,7 @@ export const views: Record<
   },
   NATIVE: {
     title: '自然增加',
-    cols: ['出生人數', '死亡人數', '增加數', '增加率'],
+    cols: ['出生人數', '死亡人數'],
     path: 'nativeIncrement',
     // colors: undefined,
     range: [
@@ -43,7 +43,7 @@ export const views: Record<
   },
   SOCIAL: {
     title: '社會增加',
-    cols: ['遷入人數', '遷出人數', '增加數', '增加率'],
+    cols: ['遷入人數', '遷出人數'],
     path: 'socialIncrement',
     // colors: undefined,
     range: [
@@ -109,9 +109,9 @@ export function diffFunc(type: DiffType, obj: IBaseType) {
 
   switch (type) {
     case 'NATIVE':
-      return [birth, death, nativeDiff, nativeRate]
+      return [birth, -death, nativeDiff, nativeRate]
     case 'SOCIAL':
-      return [moveIn, moveOut, socialDiff, socialRate]
+      return [moveIn, -moveOut, socialDiff, socialRate]
     case 'POP':
       return [nativeDiff, socialDiff, popDiff, popRate]
   }

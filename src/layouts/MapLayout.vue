@@ -1,5 +1,5 @@
 <template>
-  <main class="grow p-4 flex h-full w-full overflow-hidden relative">
+  <main class="grow p-4 lg:p-8 flex h-full w-full overflow-hidden relative">
     <slot />
   </main>
   <div

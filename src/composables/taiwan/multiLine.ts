@@ -35,14 +35,10 @@ export const csvConvertor = async (path: string) => {
 export const initChart = (data: ICsvObj<number>) => {
   const copy = JSON.parse(JSON.stringify(data)) as ICsvObj<number>
   const { keys, rows } = copy
-  const [years, ...rest] = rows
-  const rate = rest.splice(rest.length - 1, 1)[0]
-  const total = rest.splice(rest.length - 1, 1)[0]
+  const [year, row1k, row2k, ...r] = keys
+  const [years, row1, row2, total, rate] = rows
 
-  // remove key="year"
-  keys.shift()
-  // keys.push(keys.splice(index - 1, 1)[0])
-
+  const rest = [row1, row2]
   const numRange = d3.extent(rest.flat()) as number[]
   const x = d3.scaleLinear(d3.extent(years) as number[], [
     conf.mx,
@@ -50,10 +46,6 @@ export const initChart = (data: ICsvObj<number>) => {
   ])
   const y = d3.scaleLinear(numRange, [conf.h - conf.mb, conf.mt])
   const y2 = d3.scaleLinear(d3.extent(rate) as number[], [
-    conf.h - conf.mb,
-    conf.mt,
-  ])
-  const y3 = d3.scaleLinear(d3.extent(total) as number[], [
     conf.h - conf.mb,
     conf.mt,
   ])
@@ -67,12 +59,6 @@ export const initChart = (data: ICsvObj<number>) => {
     (d) => x(d[0]),
     (d) => y2(d[1])
   )
-
-  const line3 = d3.line(
-    (d) => x(d[0]),
-    (d) => y3(d[1])
-  )
-
 
   const area = d3
     .area()
@@ -98,7 +84,6 @@ export const initChart = (data: ICsvObj<number>) => {
   const drawYAxis = (svg: SvgSelection) => {
     svg
       .select('.y-axis1')
-      // .call(d3.axisLeft(y).ticks(conf.h / 40))
       .call(d3.axisLeft(y).ticks(conf.h / 40, '~s'))
       .call((g) => g.selectAll('.tick line').attr('stroke-opacity', '0.3'))
       .call((g) =>
@@ -114,7 +99,7 @@ export const initChart = (data: ICsvObj<number>) => {
     svg
       .select('.y-axis2')
       .call(
-        d3.axisRight(y3).ticks(conf.h / 40, '~s')
+        d3.axisRight(y2).ticks(conf.h / 40, '~s')
         // .tickFormat(d3.format('.' + d3.precisionFixed(1) + '%'))
       )
       .call((g) => g.select('.domain').remove())
@@ -176,9 +161,7 @@ export const initChart = (data: ICsvObj<number>) => {
       const xPo = x(years[i])
       const _r = Object.values(rest).map((m) => y(m[i]))
       const a = y2(rate[i])
-      const b = y3(total[i])
       _r.push(a)
-      _r.push(b)
 
       const focus = svg.select('.focus')
       const circles = focus.selectAll('circle')
@@ -201,7 +184,7 @@ export const initChart = (data: ICsvObj<number>) => {
   }
 
   return {
-    keys,
+    keys: [row1k, row2k],
     years,
     rest,
     rate,
