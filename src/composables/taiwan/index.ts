@@ -9,6 +9,8 @@ const height = 800
 const csvConvertor = async (path: string) =>
   await d3.text(path).then((res) => d3.csvParseRows(res))
 
+export type DiffType = 'POP' | 'NATIVE' | 'SOCIAL'
+
 export const views: Record<
   DiffType,
   {
@@ -79,8 +81,6 @@ const admin_code = {
   連江縣: '09007',
 } as any
 
-export type DiffType = 'POP' | 'NATIVE' | 'SOCIAL'
-
 export interface IBaseType {
   city: string
   birth: number
@@ -90,11 +90,6 @@ export interface IBaseType {
   moveOut: number
   socialRate: number
   popRate: number
-}
-
-export interface ICityData {
-  name: string
-  id: string
 }
 
 interface ISumData {
@@ -152,6 +147,30 @@ export const sumData: ISumData = await Promise.all(
   }
 
   return result
+})
+
+export interface ICsvObj<T> {
+  keys: string[]
+  rows: T[][]
+}
+
+export const taiwanData: Record<DiffType, ICsvObj<number>> = await Promise.all(
+  ['popIncrement', 'nativeIncrement', 'socialIncrement'].map((k) =>
+    csvConvertor(`./data/${k}.csv`)
+  )
+).then((res) => {
+  const [pop, native, social] = res.map((r) => {
+    const obj: ICsvObj<number> = { keys: [], rows: [] }
+    for (const m of r) {
+      const _k = m.shift()!
+      const r = m.map((r) => +r)
+      obj.keys.push(_k)
+      obj.rows.push(r)
+    }
+    return obj
+  })
+
+  return { POP: pop, NATIVE: native, SOCIAL: social }
 })
 
 export const initMap = (func: (...arg: any) => void) => {

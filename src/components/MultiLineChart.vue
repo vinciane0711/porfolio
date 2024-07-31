@@ -1,51 +1,56 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import {
-  conf,
-  initChart,
-  csvConvertor,
-  type ICsvObj,
-} from '@/composables/taiwan/multiLine'
+import { conf, initChart } from '@/composables/taiwan/multiLine'
+import { type ICsvObj } from '@/composables/taiwan'
 import { numWithCommas } from '@/composables'
 
 const props = defineProps<{
+  years: number[]
   title: string
-  file: string | ICsvObj<number>
-  cntYear: number
+  file: ICsvObj<number>
+  yearIndex: number
   viewIndex: number
 }>()
 const el = ref<HTMLElement>()
-const palette = ['var(--mainColor)', 'var(--subColor)', 'lightGray']
-const data =
-  typeof props.file === 'string' ? await csvConvertor(props.file) : props.file
-
-const {
-  keys,
-  years,
-  rest,
-  rate,
-  total,
-  line,
-  line2,
-  area,
-  transposeFunc,
-  drawDetail,
-} = initChart(data)
-const yearIndex = computed(() => years.findIndex((i) => i === props.cntYear))
+const palette = ['var(--mainColor)', 'var(--subColor)', 'gray']
 const emit = defineEmits(['changeYear', 'changeViewIndex', 'openTable'])
+
+const data = computed(() => {
+  const [year, row1k, row2k, ...r] = props.file.keys
+  const [years, row1, row2, total, rate] = props.file.rows
+  return {
+    keys: [row1k, row2k, '增加率'],
+    rest: [row1, row2],
+    rate,
+    total,
+  }
+})
 
 onMounted(() => {
   if (!el.value) return
-  const { updateFocus } = drawDetail(el.value, (n: number) =>
-    emit('changeYear', n)
+  const { updateYAxis, updateFocus } = initChart(
+    el.value,
+    props.years,
+    (n: number) => emit('changeYear', n)
   )
-  updateFocus(yearIndex.value)
 
   watch(
-    () => props.cntYear,
+    () => props.file,
     () => {
-      updateFocus(yearIndex.value)
-    }
+      updateYAxis(data.value.rest, data.value.rate)
+    },
+    { immediate: true }
+  )
+
+  watch(
+    () => [props.file, props.yearIndex],
+    () => {
+      const arr = [...data.value.rest, data.value.rate].map(
+        (d) => d[props.yearIndex]
+      )
+      updateFocus(props.years[props.yearIndex], arr)
+    },
+    { immediate: true }
   )
 })
 </script>
@@ -57,11 +62,13 @@ onMounted(() => {
     <div class="flex items-center">
       <h3 class="font-bold text-lg">
         {{ title }}
-        <span class="text-sm ml-2">{{ numWithCommas(total[yearIndex]) }}</span>
+        <span class="text-sm ml-2">{{
+          numWithCommas(data.total[yearIndex])
+        }}</span>
       </h3>
       <span
         class="icon-[mdi--table] text-xl ml-auto text-gray-500 hover:text-gray-700 cursor-pointer"
-        @click="emit('openTable', data)"
+        @click="emit('openTable', title, file)"
       ></span>
     </div>
 
@@ -71,24 +78,25 @@ onMounted(() => {
       <g class="y-axis2" :transform="`translate(${conf.w - conf.mx},0)`" />
       <g class="multi-lines" stroke-width="2">
         <path
+          class="rate-line"
           fill="none"
           :stroke="palette[2]"
           stroke-dasharray="4 3"
-          :d="`${line2(transposeFunc(rate))}`"
+          :opacity="viewIndex !== 2 ? 0.7 : 1"
         />
         <path
-          v-for="(r, i) in rest"
+          class="rest-line"
+          v-for="(r, i) in data.rest"
           fill="none"
           :stroke="palette[i]"
           :opacity="viewIndex !== i ? 0.3 : 1"
-          :d="`${line(transposeFunc(r))}`"
         />
 
         <path
-          v-for="(r, i) in rest"
+          class="rest-bg"
+          v-for="(r, i) in data.rest"
           :fill="`url(#grad${[i + 1]})`"
           :opacity="viewIndex !== i ? 0.3 : 1"
-          :d="`${area(transposeFunc(r))}`"
         />
       </g>
 
@@ -118,7 +126,7 @@ onMounted(() => {
           :y2="conf.mt"
         />
         <circle
-          v-for="(l, i) in keys.length + 1"
+          v-for="(l, i) in data.keys.length"
           r="4"
           :fill="palette[i]"
           stroke="white"
@@ -130,7 +138,7 @@ onMounted(() => {
     <!-- legends & cntValues -->
     <div class="grid grid-cols-3 gap-2 text-sm px-4">
       <div
-        v-for="(l, i) in [...keys, '增加率']"
+        v-for="(l, i) in data.keys"
         class="cursor-pointer"
         @click="emit('changeViewIndex', i)"
       >
@@ -142,7 +150,7 @@ onMounted(() => {
           <p>{{ l }}</p>
         </div>
         <p class="text-center font-bold">
-          {{ numWithCommas([...rest, rate][i][yearIndex]) }}
+          {{ numWithCommas([...data.rest, data.rate][i][yearIndex]) }}
         </p>
       </div>
     </div>

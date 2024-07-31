@@ -11,115 +11,36 @@ export const conf = {
 type MatrixArray = [number, number][]
 type SvgSelection = d3.Selection<HTMLElement, unknown, null, undefined>
 
-export interface ICsvObj<T> {
-  keys: string[]
-  rows: T[][]
-}
-
-export const csvConvertor = async (path: string) => {
-  return await d3.text(path).then((res) => {
-    const rawData = d3.csvParseRows(res)
-    const obj: ICsvObj<number> = { keys: [], rows: [] }
-
-    for (const m of rawData) {
-      const _k = m.shift()!
-      const r = m.map((r) => +r)
-      obj.keys.push(_k)
-      obj.rows.push(r)
-    }
-
-    return obj
-  })
-}
-
-export const initChart = (data: ICsvObj<number>) => {
-  const copy = JSON.parse(JSON.stringify(data)) as ICsvObj<number>
-  const { keys, rows } = copy
-  const [year, row1k, row2k, ...r] = keys
-  const [years, row1, row2, total, rate] = rows
-
-  const rest = [row1, row2]
-  const numRange = d3.extent(rest.flat()) as number[]
+export const initChart = (el: HTMLElement, years: number[], func: any) => {
+  const svg = d3.select(el)
+  // const [years, row1, row2, total, rate] = rows
   const x = d3.scaleLinear(d3.extent(years) as number[], [
     conf.mx,
     conf.w - conf.mx,
   ])
-  const y = d3.scaleLinear(numRange, [conf.h - conf.mb, conf.mt])
-  const y2 = d3.scaleLinear(d3.extent(rate) as number[], [
-    conf.h - conf.mb,
-    conf.mt,
-  ])
 
-  const line = d3.line(
-    (d) => x(d[0]),
-    (d) => y(d[1])
-  )
-
-  const line2 = d3.line(
-    (d) => x(d[0]),
-    (d) => y2(d[1])
-  )
-
+  const y = d3.scaleLinear().range([conf.h - conf.mb, conf.mt])
+  const y2 = d3.scaleLinear().range([conf.h - conf.mb, conf.mt])
+  const line = d3.line().x((d) => x(d[0]))
+  const line2 = d3.line().x((d) => x(d[0]))
   const area = d3
     .area()
     .curve(d3.curveCardinal.tension(0.95))
     .x((d) => x(d[0]))
     .y0(conf.h - conf.mb)
-    .y1((d) => y(d[1]))
 
   const transposeFunc = (r: number[]) => d3.transpose([years, r]) as MatrixArray
 
-  const drawXAxis = (svg: SvgSelection) => {
-    svg
-      .select('.x-axis')
-      .call(d3.axisBottom(x).ticks(conf.w / 40, ''))
-      .call((g) =>
-        g
-          .selectAll('.tick text')
-          .attr('x2', conf.w - conf.mx * 2)
-          .attr('transform', 'translate(-10,5) rotate(-40)')
-      )
-  }
-
-  const drawYAxis = (svg: SvgSelection) => {
-    svg
-      .select('.y-axis1')
-      .call(d3.axisLeft(y).ticks(conf.h / 40, '~s'))
-      .call((g) => g.selectAll('.tick line').attr('stroke-opacity', '0.3'))
-      .call((g) =>
-        g
-          .selectAll('.tick line')
-          .clone()
-          .attr('x2', conf.w - conf.mx * 2)
-          .attr('stroke-opacity', 0.1)
-      )
-      .call((g) => g.select('.domain').remove())
-      .call((g) => g.append('text').attr('x', -conf.mx).attr('y', 10))
-
-    svg
-      .select('.y-axis2')
-      .call(
-        d3.axisRight(y2).ticks(conf.h / 40, '~s')
-        // .tickFormat(d3.format('.' + d3.precisionFixed(1) + '%'))
-      )
-      .call((g) => g.select('.domain').remove())
-      .call((g) => g.selectAll('.tick line').attr('stroke-opacity', '0.3'))
-      .call((g) => g.append('text').attr('x', -conf.mx).attr('y', 10))
-
-    // divider for separating positive & negative value
-    // const zeroPo = y2(0)
-    // if (zeroPo > 0 && zeroPo < conf.h - conf.mt - conf.mb) {
-    //   svg
-    //     .select('.y-axis2')
-    //     .append('line')
-    //     .attr('stroke', 'red')
-    //     .attr('stroke-opacity', 0.3)
-    //     .attr('x1', 0)
-    //     .attr('x2', -(conf.w - conf.mx * 2))
-    //     .attr('y1', zeroPo)
-    //     .attr('y2', zeroPo)
-    // }
-  }
+  // draw X Axis
+  svg
+    .select('.x-axis')
+    .call(d3.axisBottom(x).ticks(conf.w / 40, ''))
+    .call((g) =>
+      g
+        .selectAll('.tick text')
+        .attr('x2', conf.w - conf.mx * 2)
+        .attr('transform', 'translate(-10,5) rotate(-40)')
+    )
 
   const detectXPo = (e: MouseEvent, f: (d: number) => void) => {
     const x0 = x.invert(d3.pointer(e)[0])
@@ -133,66 +54,75 @@ export const initChart = (data: ICsvObj<number>) => {
     }
   }
 
-  const overlayFunc = (svg: SvgSelection, func: any) => {
-    const focusLine = svg.select('.line')
-    const moveFunc = (d: number) =>
-      focusLine.attr('transform', `translate(${x(d)}, 0)`)
-    const clickFunc = (d: number) => {
-      const i = years.findIndex((y) => y === d)
-      func(i)
-    }
+  const focusLine = svg.select('.line')
+  const moveFunc = (d: number) =>
+    focusLine.attr('transform', `translate(${x(d)}, 0)`)
+  const clickFunc = (d: number) => {
+    const i = years.findIndex((y) => y === d)
+    func(i)
+  }
+  svg
+    .select('.overlay')
+    .on('mouseover', () => focusLine.attr('opacity', 1))
+    .on('mouseout', () => focusLine.attr('opacity', 0))
+    .on('mousemove', (e) => detectXPo(e, moveFunc))
+    .on('click', (e) => detectXPo(e, clickFunc))
+
+  // draw Y Axis
+  const updateYAxis = (rest: number[][], rate: number[]) => {
+    y.domain(d3.extent(rest.flat()) as number[])
+    y2.domain(d3.extent(rate) as number[])
+    line.y((d) => y(d[1]))
+    line2.y((d) => y2(d[1]))
+    area.y1((d) => y(d[1]))
+
     svg
-      .select('.overlay')
-      .on('mouseover', () => focusLine.attr('opacity', 1))
-      .on('mouseout', () => focusLine.attr('opacity', 0))
-      .on('mousemove', (e) => detectXPo(e, moveFunc))
-      .on('click', (e) => detectXPo(e, clickFunc))
+      .select('.y-axis1')
+      .call(d3.axisLeft(y).ticks(conf.h / 40, '~s'))
+      .call((g) =>
+        g
+          .selectAll('.tick line')
+          .attr('x2', conf.w - conf.mx * 2)
+          .attr('stroke-opacity', '0.1')
+      )
+      .call((g) => g.select('.domain').remove())
+      .call((g) => g.join('text').attr('x', -conf.mx).attr('y', 10))
+
+    svg
+      .select('.y-axis2')
+      .call(d3.axisRight(y2).ticks(conf.h / 40, '~s'))
+      .call((g) => g.select('.domain').remove())
+      .call((g) => g.selectAll('.tick line').attr('stroke-opacity', '0.3'))
+      .call((g) => g.join('text').attr('x', -conf.mx).attr('y', 10))
+
+    svg.select('.rate-line').attr('d', line2(transposeFunc(rate)))
+    svg
+      .selectAll('.rest-line')
+      .data(rest)
+      .join('path')
+      .attr('d', (d) => line(transposeFunc(d)))
+
+    svg
+      .selectAll('.rest-bg')
+      .data(rest)
+      .join('path')
+      .attr('d', (d) => area(transposeFunc(d)))
   }
 
-  const drawDetail = (el: HTMLElement, func: any) => {
-    const svg = d3.select(el)
-    drawXAxis(svg)
-    drawYAxis(svg)
-    overlayFunc(svg, func)
+  function updateFocus(year: number, arr: number[]) {
+    const xPo = x(year)
+    const _r = Object.values(arr).map((m, i) => (i === 2 ? y2(m) : y(m)))
+    const focus = svg.select('.focus')
+    const circles = focus.selectAll('circle')
 
-    let initStatus = true
-
-    function updateFocus(i: number) {
-      const xPo = x(years[i])
-      const _r = Object.values(rest).map((m) => y(m[i]))
-      const a = y2(rate[i])
-      _r.push(a)
-
-      const focus = svg.select('.focus')
-      const circles = focus.selectAll('circle')
-
-      if (initStatus) {
-        focus.attr('transform', `translate(${xPo}, 0)`)
-        circles.each((data, i, nodes) => {
-          d3.select(nodes[i]).attr('cy', _r[i])
-        })
-        initStatus = false
-      } else {
-        focus.transition().attr('transform', `translate(${xPo}, 0)`)
-        circles.each((data, i, nodes) => {
-          d3.select(nodes[i]).transition().attr('cy', _r[i])
-        })
-      }
-    }
-
-    return { updateFocus }
+    focus.transition().attr('transform', `translate(${xPo}, 0)`)
+    circles.each((data, i, nodes) => {
+      d3.select(nodes[i]).transition().attr('cy', _r[i])
+    })
   }
 
   return {
-    keys: [row1k, row2k],
-    years,
-    rest,
-    rate,
-    total,
-    line,
-    line2,
-    area,
-    transposeFunc,
-    drawDetail,
+    updateYAxis,
+    updateFocus,
   }
 }

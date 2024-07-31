@@ -4,12 +4,12 @@ import {
   views,
   initMap,
   sumData,
+  taiwanData,
   diffFunc,
   type DiffType,
-  type ICityData,
+  type ICsvObj,
 } from '@/composables/taiwan'
 import { initChart } from '@/composables/taiwan/chart'
-import { type ICsvObj } from '@/composables/taiwan/multiLine'
 import MapLayout from '@/layouts/MapLayout.vue'
 import Chart from '@/components/MultiLineChart.vue'
 import TimelineBar from '@/components/map/TimelineBar.vue'
@@ -22,26 +22,22 @@ const cntYear = computed(() => years[cntYearIndex.value])
 const cntView = ref<DiffType>('POP')
 const cntViewIndex = ref(2)
 const cntCityName = ref('')
-const renderCom = ref(true)
-const tableData = ref<ICsvObj<number>>()
+const tableData = ref<{
+  name: string
+  table: ICsvObj<number> | undefined
+}>({
+  name: '',
+  table: undefined,
+})
 
 const modal = ref(false)
 const modalRef = ref(null)
-
-onClickOutside(modalRef, (event) => {
-  console.log(event)
+onClickOutside(modalRef, (e) => {
   modal.value = false
 })
 
-const forceRender = async () => {
-  renderCom.value = false
-  await nextTick()
-  renderCom.value = true
-}
-
 const cityPeriodsData = computed(() => {
   if (!cntCityName.value) return
-  forceRender()
   const rows: number[][] = [[], [], [], []]
   Object.values(sumData).forEach((yearData) => {
     const city = yearData.find((c) => c.city === cntCityName.value)!
@@ -75,22 +71,24 @@ const dynamicRange = computed(
   () => views[cntView.value].range[cntViewIndex.value]
 )
 
-const openTable = (data: ICsvObj<number>) => {
-  tableData.value = data
+const openTable = (name: string, data: ICsvObj<number>) => {
+  tableData.value = { name, table: data }
   modal.value = true
 }
+
+const changeCity = (name: string) => (cntCityName.value = name)
 
 onMounted(() => {
   const {
     updateMapRange,
     updateColor,
     selectCity: mapCity,
-  } = initMap((name) => (cntCityName.value = name))
+  } = initMap(changeCity)
   const {
     updateRange,
     updateChart,
     selectCity: barChartCity,
-  } = initChart((name) => (cntCityName.value = name))
+  } = initChart(changeCity)
 
   watch(
     [cntView, cntViewIndex],
@@ -148,30 +146,52 @@ onMounted(() => {
           </button>
         </div>
       </div>
-      <Suspense>
-        <Chart
-          v-for="(v, i) in views"
-          title="全台灣"
-          :file="`./data/${v.path}.csv`"
-          :cntYear="cntYear"
-          :viewIndex="cntViewIndex"
-          :style="{ display: cntView === i ? 'flex' : 'none' }"
-          @changeYear="(n:number)=>cntYearIndex=n"
-          @changeViewIndex="(n:number)=>cntViewIndex=n"
-          @openTable="openTable"
-        />
-      </Suspense>
-      <Suspense v-if="renderCom && cntCityName">
-        <Chart
-          :title="cntCityName"
-          :file="cityPeriodsData!"
-          :cntYear="cntYear"
-          :viewIndex="cntViewIndex"
-          @changeYear="(n:number)=>cntYearIndex=n"
-          @changeViewIndex="(n:number)=>cntViewIndex=n"
-          @openTable="openTable"
-        />
-      </Suspense>
+
+      <Chart
+        title="全台灣"
+        :years="years"
+        :file="taiwanData[cntView]"
+        :yearIndex="cntYearIndex"
+        :viewIndex="cntViewIndex"
+        @changeYear="(n:number)=>cntYearIndex=n"
+        @changeViewIndex="(n:number)=>cntViewIndex=n"
+        @openTable="openTable"
+      />
+
+      <Chart
+        v-if="cityPeriodsData"
+        :years="years"
+        :title="cntCityName"
+        :file="cityPeriodsData!"
+        :yearIndex="cntYearIndex"
+        :viewIndex="cntViewIndex"
+        @changeYear="(n:number)=>cntYearIndex=n"
+        @changeViewIndex="(n:number)=>cntViewIndex=n"
+        @openTable="openTable"
+      />
+      <div
+        v-else
+        class="p-4 rounded-lg flex gap-2 flex-col w-[400px] border transition bg-white border-gray-300"
+      >
+        <p>選擇城市</p>
+
+        <div class="grid grid-cols-3 gap-2 m-auto">
+          <button
+            class="border border-gray-300 text-sm px-2 py-1 rounded-md"
+            v-for="city in [
+              '臺北市',
+              '新北市',
+              '桃園市',
+              '臺中市',
+              '臺南市',
+              '高雄市',
+            ]"
+            @click="changeCity(city)"
+          >
+            {{ city }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- MAIN MAP -->
@@ -213,28 +233,42 @@ onMounted(() => {
   <div
     v-if="modal"
     ref="modalRef"
-    class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[3/4] z-10"
+    class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[80%] z-10"
   >
-    <div class="bg-white p-4 border border-gray-30 rounded-md shadow-md">
-      <button class="absolute top-2 right-2" @click="modal = false">𝖷</button>
-      <table v-if="tableData" class="text-xs [*_td]:p-0.5">
-        <colgroup>
-          <col />
-          <col v-for="y in years" :class="y === cntYear && 'bg-gray-100'" />
-        </colgroup>
-        <tr v-for="(r, i) in tableData.rows">
-          <td>{{ tableData.keys[i] }}</td>
-          <td
-            v-for="(v, j) in r"
-            :style="{
-              color: v < 0 ? 'red' : 'current',
-            }"
-            @click="cntYearIndex = j"
-          >
-            {{ numWithCommas(v) }}
-          </td>
-        </tr>
-      </table>
+    <div
+      class="bg-white p-4 border border-gray-30 rounded-md shadow-md flex flex-col gap-2"
+    >
+      <button class="absolute top-2 right-2 flex" @click="modal = false">
+        <span
+          class="icon-[mdi--close] text-xl text-gray-500 hover:text-gray-700 cursor-pointer"
+        />
+      </button>
+      <template v-if="tableData">
+        <h4 class="text-center">
+          {{ tableData.name }} {{ views[cntView].title }}
+        </h4>
+        <div class="w-full overflow-x-auto">
+          <table v-if="tableData.table" class="text-xs [*_td]:p-0.5 rounded-md">
+            <colgroup>
+              <col />
+              <col v-for="y in years" :class="y === cntYear && 'bg-gray-100'" />
+            </colgroup>
+            <tr v-for="(r, i) in tableData.table.rows">
+              <td>{{ tableData.table.keys[i] }}</td>
+              <td
+                v-for="(v, j) in r"
+                :style="{
+                  color: v < 0 ? 'red' : 'current',
+                  textAlign: i === 0 ? 'center' : 'right',
+                }"
+                @click="cntYearIndex = j"
+              >
+                {{ numWithCommas(v) }}
+              </td>
+            </tr>
+          </table>
+        </div>
+      </template>
     </div>
   </div>
 </template>
