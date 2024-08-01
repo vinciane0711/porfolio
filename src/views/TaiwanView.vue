@@ -9,8 +9,8 @@ import {
   type ICsvObj,
 } from '@/composables/taiwan'
 import MapLayout from '@/layouts/MapLayout.vue'
-import Chart from '@/components/MultiLineChart.vue'
-import TimelineBar from '@/components/map/TimelineBar.vue'
+import Chart from '@/components/taiwan/MultiLineChart.vue'
+import TimelineBar from '@/components/taiwan/TimelineBar.vue'
 import BarChart from '@/components/taiwan/BarChart.vue'
 import Map from '@/components/taiwan/Map.vue'
 import { onClickOutside, useWindowSize } from '@vueuse/core'

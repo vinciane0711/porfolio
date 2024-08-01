@@ -8,11 +8,11 @@ const router = createRouter({
       name: 'home',
       component: () => import('../views/TaiwanView.vue'),
     },
-    {
-      path: '/north-population',
-      name: 'north-pop',
-      component: () => import('../views/PopView.vue'),
-    },
+    // {
+    //   path: '/north-population',
+    //   name: 'north-pop',
+    //   component: () => import('../views/PopView.vue'),
+    // },
   ],
 })
 

@@ -6,6 +6,9 @@ import Icons from 'unplugin-icons/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  build: {
+    target: 'esnext', //browsers can handle the latest ES features
+  },
   plugins: [vue(), dsv(), Icons({ compiler: 'vue3' })],
   resolve: {
     alias: {
