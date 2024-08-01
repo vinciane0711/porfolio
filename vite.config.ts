@@ -6,6 +6,7 @@ import Icons from 'unplugin-icons/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/portfolio/',
   build: {
     target: 'esnext', //browsers can handle the latest ES features
   },
