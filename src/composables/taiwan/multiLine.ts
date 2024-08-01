@@ -9,11 +9,9 @@ export const conf = {
 }
 
 type MatrixArray = [number, number][]
-type SvgSelection = d3.Selection<HTMLElement, unknown, null, undefined>
 
 export const initChart = (el: HTMLElement, years: number[], func: any) => {
   const svg = d3.select(el)
-  // const [years, row1, row2, total, rate] = rows
   const x = d3.scaleLinear(d3.extent(years) as number[], [
     conf.mx,
     conf.w - conf.mx,

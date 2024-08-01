@@ -25,7 +25,7 @@ const cityObj = [
   '連江縣',
 ]
 
-const margin = { top: 30, right: 10, bottom: 0, left: 10 }
+export const margin = { top: 30, right: 10, bottom: 0, left: 10 }
 const barSize = 30
 const n = cityObj.length
 const width = 350
@@ -33,37 +33,24 @@ const _h = barSize * n
 const height = _h + margin.top + margin.bottom
 const _w = width - margin.left - margin.right
 
-export const initChart = (func: (...arg: any) => void) => {
-  const barChart = d3
-    .select('#chart')
-    .attr('viewBox', [0, 0, width, height])
-    .attr('width', '100%')
-    // .attr('height', _h)
-    .attr('font-size', '1rem')
-
+export const initChart = (el: HTMLElement, func: (...arg: any) => void) => {
+  const barChart = d3.select(el).attr('viewBox', [0, 0, width, height])
   const x = d3.scaleLinear().rangeRound([0, _w])
   const y = d3.scaleBand().rangeRound([0, _h]).padding(0.2).domain(cityObj)
 
-  const contentWrap = barChart
-    .append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`)
-  const barsGroup = contentWrap.append('g')
-  const textGroup = contentWrap.append('g')
-  const labelGroup = contentWrap.append('g')
-  const valueGroup = contentWrap.append('g').attr('text-anchor', 'end')
-  const zeroLine = contentWrap
-    .append('line')
-    .attr('y1', 0)
-    .attr('y2', _h)
-    .attr('stroke', 'lightGray')
-    .attr('stroke-dasharray', '4 3')
+  const contentWrap = barChart.select('.contentWrap')
+  const barsGroup = contentWrap.select('.barsGroup')
+  const textGroup = contentWrap.select('.textGroup')
+  const labelGroup = contentWrap.select('.labelGroup')
+  const valueGroup = contentWrap.select('.valueGroup')
+  const zeroLine = contentWrap.select('line').attr('y2', _h)
 
   textGroup
     .selectAll('text')
     .data(cityObj)
     .join('text')
     .attr('dy', '1rem')
-    .attr('x', 0)
+    .attr('x', 2)
     .attr('y', (d) => y(d) as number)
     .text((d) => d)
 
@@ -77,7 +64,6 @@ export const initChart = (func: (...arg: any) => void) => {
     .attr('width', _w + 2)
     .attr('fill', 'transparent')
     .attr('cursor', 'pointer')
-    .attr('data-city', (d) => d)
     .on('click', (e, d) => func(d))
 
   function axis() {
@@ -89,8 +75,17 @@ export const initChart = (func: (...arg: any) => void) => {
   const updateAxis = axis()
 
   function selectCity(id: string) {
-    // cityLabelGroup.select('rect').attr('stroke', '')
-    // cityLabelGroup.select(`rect[data-city="${id}"]`).attr('stroke', 'gray')
+    textGroup
+      .selectAll('text')
+      .attr('opacity', (d) => (d === id ? '1' : '0.4'))
+      .attr('font-weight', (d) => (d === id ? 'bold' : 'normal'))
+    valueGroup
+      .selectAll('text')
+      .attr('opacity', (d) => (d === id ? '1' : '0.4'))
+      .attr('font-weight', (d) => (d === id ? 'bold' : 'normal'))
+    barsGroup
+      .selectAll('rect')
+      .attr('opacity', (d) => (d === id ? '0.5' : '0.2'))
   }
 
   let xPo = (d: number) => x(0)
@@ -111,7 +106,7 @@ export const initChart = (func: (...arg: any) => void) => {
     }
   }
 
-  function updateChart(data: { [city: string]: number }) {
+  function updateChart(data: Record<string, number>) {
     barsGroup
       .selectAll('rect')
       .data(cityObj)
@@ -146,7 +141,7 @@ export const initChart = (func: (...arg: any) => void) => {
           enter
             .append('text')
             .attr('dy', '1rem')
-            .attr('x', _w)
+            .attr('x', _w - 2)
             .attr('y', (d) => y(d) as number)
             .text((d) => data[d].toLocaleString()),
         (update) => update.text((d) => data[d].toLocaleString())

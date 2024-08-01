@@ -16,38 +16,30 @@ export const views: Record<
   {
     title: string
     cols: string[]
-    path: string
-    // colors: string[] | undefined
     range: [[number, number], [number, number], [number, number]]
   }
 > = {
   POP: {
     title: '人口增加',
     cols: ['自然增加', '社會增加'],
-    path: 'popIncrement',
-    // colors: ['skyBlue', 'lightGreen', 'lightGray', 'lightGray'],
     range: [
-      [-25000, 25000],
-      [-25000, 25000],
+      [-30000, 30000],
+      [-30000, 30000],
       [-50000, 50000],
     ],
   },
   NATIVE: {
     title: '自然增加',
     cols: ['出生人數', '死亡人數'],
-    path: 'nativeIncrement',
-    // colors: undefined,
     range: [
       [0, 30000],
       [-30000, 0],
-      [-20000, 20000],
+      [-30000, 30000],
     ],
   },
   SOCIAL: {
     title: '社會增加',
     cols: ['遷入人數', '遷出人數'],
-    path: 'socialIncrement',
-    // colors: undefined,
     range: [
       [0, 200000],
       [-200000, 0],
@@ -173,7 +165,7 @@ export const taiwanData: Record<DiffType, ICsvObj<number>> = await Promise.all(
   return { POP: pop, NATIVE: native, SOCIAL: social }
 })
 
-export const initMap = (func: (...arg: any) => void) => {
+export const initMap = (el: HTMLElement, func: (...arg: any) => void) => {
   const _d = topoFunc.convert<{
     id: string
     code: string
@@ -182,10 +174,12 @@ export const initMap = (func: (...arg: any) => void) => {
   }>(taiwanMap, taiwanMap.objects.county)
 
   const svg = d3
-    .select('#map')
+    .select(el)
     .attr('viewBox', [0, 0, width, height])
     .attr('stroke-linejoin', 'round')
-  const projection = d3.geoEquirectangular().fitSize([width, height], _d)
+  const projection = d3
+    .geoEquirectangular()
+    .fitSize([width - 10 * 2, height - 10 * 2], _d)
   const geoGenerator = d3.geoPath().projection(projection)
 
   const cityGroup = svg
@@ -194,6 +188,7 @@ export const initMap = (func: (...arg: any) => void) => {
     .attr('fill', 'white')
     .attr('stroke', 'lightGray')
     .attr('stroke-width', '2')
+    .attr('transform', 'translate(10,10)')
 
   const tooltip = d3.select('.tooltip')
 
@@ -233,7 +228,7 @@ export const initMap = (func: (...arg: any) => void) => {
     ['blue', 'white', 'orange']
   )
 
-  function updateMapRange(range: [number, number]) {
+  function updateRange(range: [number, number]) {
     const [min, max] = range
     if (min === 0) {
       colorFunc.domain(range).range(['white', 'orange'])
@@ -252,5 +247,5 @@ export const initMap = (func: (...arg: any) => void) => {
       .attr('fill', (d: any) => colorFunc(data[d.properties.name_zh]))
   }
 
-  return { updateMapRange, updateColor, selectCity }
+  return { updateRange, updateColor, selectCity }
 }

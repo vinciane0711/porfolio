@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, nextTick } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import {
   views,
-  initMap,
   sumData,
   taiwanData,
   diffFunc,
   type DiffType,
   type ICsvObj,
 } from '@/composables/taiwan'
-import { initChart } from '@/composables/taiwan/chart'
 import MapLayout from '@/layouts/MapLayout.vue'
 import Chart from '@/components/MultiLineChart.vue'
 import TimelineBar from '@/components/map/TimelineBar.vue'
-import { onClickOutside } from '@vueuse/core'
+import BarChart from '@/components/taiwan/BarChart.vue'
+import Map from '@/components/taiwan/Map.vue'
+import { onClickOutside, useWindowSize } from '@vueuse/core'
 import { numWithCommas } from '@/composables'
 
 const years = Array.from({ length: 14 }).map((y, i) => i + 99)
@@ -35,6 +35,7 @@ const modalRef = ref(null)
 onClickOutside(modalRef, (e) => {
   modal.value = false
 })
+const { width } = useWindowSize()
 
 const cityPeriodsData = computed(() => {
   if (!cntCityName.value) return
@@ -77,56 +78,106 @@ const openTable = (name: string, data: ICsvObj<number>) => {
 }
 
 const changeCity = (name: string) => (cntCityName.value = name)
-
-onMounted(() => {
-  const {
-    updateMapRange,
-    updateColor,
-    selectCity: mapCity,
-  } = initMap(changeCity)
-  const {
-    updateRange,
-    updateChart,
-    selectCity: barChartCity,
-  } = initChart(changeCity)
-
-  watch(
-    [cntView, cntViewIndex],
-    () => {
-      updateRange(dynamicRange.value)
-      updateMapRange(dynamicRange.value)
-      updateChart(cntCityData.value[cntYear.value])
-      updateColor(cntCityData.value[cntYear.value])
-    },
-    { immediate: true }
-  )
-
-  watch(cntYear, () => {
-    updateColor(cntCityData.value[cntYear.value])
-    updateChart(cntCityData.value[cntYear.value])
-  })
-
-  watch(cntCityName, () => {
-    if (!cntCityName.value) return
-    mapCity(cntCityName.value)
-    barChartCity(cntCityName.value)
-  })
-})
 </script>
 
 <template>
-  <MapLayout>
-    <div class="flex flex-col gap-4">
-      <div class="w-full flex items-center">
-        <h1 class="text-[28px] font-bold">
-          全台人口變化
-          <span class="w-16 inline-block text-center">
-            {{ cntYear }}
-          </span>
-        </h1>
-      </div>
-      <TimelineBar :periods="years" v-model:value="cntYearIndex" />
+  <MapLayout class="max-xs:gap-2">
+    <div class="flex flex-col gap-2 xs:gap-4 w-full xs:w-max">
+      <h1>
+        全台人口變化
+        <select
+          class="bg-transparent border p-1 rounded-md"
+          v-model="cntYearIndex"
+        >
+          <option v-for="(y, i) in years" :value="i">{{ y }}</option>
+        </select>
+      </h1>
 
+      <template v-if="width >= 450">
+        <TimelineBar :periods="years" v-model:value="cntYearIndex" />
+        <div class="flex items-center">
+          <select
+            v-model="cntView"
+            class="border border-gray-300 p-1 text-sm rounded-lg"
+          >
+            <option v-for="(v, i) in views" :value="i">{{ v.title }}</option>
+          </select>
+          <button class="flex ml-1">
+            <span
+              class="icon-[mdi--information-outline] text-xl text-gray-500 hover:text-gray-700 cursor-pointer"
+            />
+          </button>
+
+          <div class="ml-auto flex gap-0.5 rounded-lg overflow-hidden">
+            <button
+              v-for="(y, i) in [...views[cntView].cols, '總覽']"
+              class="text-xs py-1.5 px-2 bg-gray-100 transition aria-pressed:bg-indigo-500 aria-pressed:text-white"
+              :aria-pressed="cntViewIndex === i"
+              @click="() => (cntViewIndex = i)"
+            >
+              {{ y }}
+            </button>
+          </div>
+        </div>
+
+        <Chart
+          title="全台灣"
+          :years="years"
+          :file="taiwanData[cntView]"
+          :yearIndex="cntYearIndex"
+          :viewIndex="cntViewIndex"
+          @changeYear="(n:number)=>cntYearIndex=n"
+          @changeViewIndex="(n:number)=>cntViewIndex=n"
+          @openTable="openTable"
+        />
+
+        <Chart
+          v-if="cityPeriodsData"
+          :years="years"
+          :title="cntCityName"
+          :file="cityPeriodsData!"
+          :yearIndex="cntYearIndex"
+          :viewIndex="cntViewIndex"
+          @changeYear="(n:number)=>cntYearIndex=n"
+          @changeViewIndex="(n:number)=>cntViewIndex=n"
+          @openTable="openTable"
+        />
+        <div v-else class="basicWrap w-full sm:w-[400px]">
+          <h3>選擇城市</h3>
+          <div class="grid grid-cols-3 gap-2">
+            <button
+              class="border border-gray-300 text-sm px-2 py-1.5 rounded-md"
+              v-for="city in [
+                '臺北市',
+                '新北市',
+                '桃園市',
+                '臺中市',
+                '臺南市',
+                '高雄市',
+              ]"
+              @click="changeCity(city)"
+            >
+              {{ city }}
+            </button>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- MAIN MAP -->
+    <Map
+      class="max-w-full max-h-[80%] m-auto md:ml-4"
+      :data="cntCityData[cntYear]"
+      :range="dynamicRange"
+      :cnt-city="cntCityName"
+      @changeCity="changeCity"
+    />
+
+    <div
+      v-if="width < 450"
+      class="flex flex-col gap-4 border border-gray-300 p-4 rounded-md"
+    >
+      <TimelineBar :periods="years" v-model:value="cntYearIndex" />
       <div class="flex items-center">
         <select
           v-model="cntView"
@@ -134,6 +185,11 @@ onMounted(() => {
         >
           <option v-for="(v, i) in views" :value="i">{{ v.title }}</option>
         </select>
+        <button class="flex ml-1">
+          <span
+            class="icon-[mdi--information-outline] text-xl text-gray-500 hover:text-gray-700 cursor-pointer"
+          />
+        </button>
 
         <div class="ml-auto flex gap-0.5 rounded-lg overflow-hidden">
           <button
@@ -147,87 +203,64 @@ onMounted(() => {
         </div>
       </div>
 
-      <Chart
-        title="全台灣"
-        :years="years"
-        :file="taiwanData[cntView]"
-        :yearIndex="cntYearIndex"
-        :viewIndex="cntViewIndex"
-        @changeYear="(n:number)=>cntYearIndex=n"
-        @changeViewIndex="(n:number)=>cntViewIndex=n"
-        @openTable="openTable"
-      />
-
-      <Chart
-        v-if="cityPeriodsData"
-        :years="years"
-        :title="cntCityName"
-        :file="cityPeriodsData!"
-        :yearIndex="cntYearIndex"
-        :viewIndex="cntViewIndex"
-        @changeYear="(n:number)=>cntYearIndex=n"
-        @changeViewIndex="(n:number)=>cntViewIndex=n"
-        @openTable="openTable"
-      />
-      <div
-        v-else
-        class="p-4 rounded-lg flex gap-2 flex-col w-[400px] border transition bg-white border-gray-300"
-      >
-        <p>選擇城市</p>
-
-        <div class="grid grid-cols-3 gap-2 m-auto">
-          <button
-            class="border border-gray-300 text-sm px-2 py-1 rounded-md"
-            v-for="city in [
-              '臺北市',
-              '新北市',
-              '桃園市',
-              '臺中市',
-              '臺南市',
-              '高雄市',
-            ]"
-            @click="changeCity(city)"
-          >
-            {{ city }}
-          </button>
+      <hr />
+      <div>
+        <Chart
+          v-if="cityPeriodsData"
+          class="border-none !p-0"
+          :years="years"
+          :title="cntCityName"
+          :file="cityPeriodsData!"
+          :yearIndex="cntYearIndex"
+          :viewIndex="cntViewIndex"
+          @changeYear="(n:number)=>cntYearIndex=n"
+          @changeViewIndex="(n:number)=>cntViewIndex=n"
+          @openTable="openTable"
+        />
+        <div v-else class="basicWrap w-full sm:w-[400px] border-none !p-0">
+          <h3>選擇城市</h3>
+          <div class="grid grid-cols-3 gap-2">
+            <button
+              class="border border-gray-300 text-sm px-2 py-1.5 rounded-md"
+              v-for="city in [
+                '臺北市',
+                '新北市',
+                '桃園市',
+                '臺中市',
+                '臺南市',
+                '高雄市',
+              ]"
+              @click="changeCity(city)"
+            >
+              {{ city }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- MAIN MAP -->
-    <svg id="map" class="max-w-full max-h-[80%] m-auto">
-      <defs>
-        <linearGradient id="grad1" x1="0%" x2="0%" y1="0%" y2="100%">
-          <stop offset="0%" stop-color="var(--mainColor)" stop-opacity="0.2" />
-          <stop
-            offset="100%"
-            stop-color="var(--mainColor)"
-            stop-opacity="0.01"
-          />
-        </linearGradient>
-        <linearGradient id="grad2" x1="0%" x2="0%" y1="0%" y2="100%">
-          <stop offset="0%" stop-color="var(--subColor)" stop-opacity="0.2" />
-          <stop
-            offset="100%"
-            stop-color="var(--subColor)"
-            stop-opacity="0.01"
-          />
-        </linearGradient>
-        <filter id="shadow" color-interpolation-filters="sRGB">
-          <feDropShadow dx="1" dy="3" stdDeviation="3" flood-opacity="0.5" />
-        </filter>
-      </defs>
-    </svg>
-
     <div
-      class="flex flex-col my-auto p-4 min-w-[350px] border border-l-gray-300 h-max max-h-full rounded-md"
+      v-if="width >= 1024"
+      class="basicWrap my-auto h-max max-h-full w-[350px] max-xl:fixed max-xl:right-4 max-xl:top-4 max-xl:bottom-4 max-xl:bg-white/60"
     >
-      <h3 class="font-bold text-lg">各縣市資料</h3>
-      <!-- BAR CHART -->
+      <h3>各縣市資料</h3>
       <div class="w-max max-h-max h-full overflow-y-scroll">
-        <svg id="chart"></svg>
+        <BarChart
+          :data="cntCityData[cntYear]"
+          :range="dynamicRange"
+          :cnt-city="cntCityName"
+          @changeCity="changeCity"
+        />
       </div>
     </div>
+
+    <!-- <p class="text-xs text-gray-500">
+        <span> 資料來源： </span> <br />
+        <a href="https://www.ris.gov.tw/app/portal/346" target="_blank">
+          內政部戶政司全球資訊網 > 人口統計資料 > 三. 年度縣市及全國統計資料 >
+          20. 縣市人口增加、自然增加及社會增加(99)
+        </a>
+      </p> -->
   </MapLayout>
 
   <div
@@ -235,18 +268,16 @@ onMounted(() => {
     ref="modalRef"
     class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[80%] z-10"
   >
-    <div
-      class="bg-white p-4 border border-gray-30 rounded-md shadow-md flex flex-col gap-2"
-    >
+    <div class="basicWrap shadow-md">
       <button class="absolute top-2 right-2 flex" @click="modal = false">
         <span
           class="icon-[mdi--close] text-xl text-gray-500 hover:text-gray-700 cursor-pointer"
         />
       </button>
       <template v-if="tableData">
-        <h4 class="text-center">
+        <h3 class="text-center">
           {{ tableData.name }} {{ views[cntView].title }}
-        </h4>
+        </h3>
         <div class="w-full overflow-x-auto">
           <table v-if="tableData.table" class="text-xs [*_td]:p-0.5 rounded-md">
             <colgroup>

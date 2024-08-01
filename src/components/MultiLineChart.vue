@@ -12,7 +12,7 @@ const props = defineProps<{
   viewIndex: number
 }>()
 const el = ref<HTMLElement>()
-const palette = ['var(--mainColor)', 'var(--subColor)', 'gray']
+const palette = ['var(--mainColor)', 'var(--subColor)', 'var(--gray-500)']
 const emit = defineEmits(['changeYear', 'changeViewIndex', 'openTable'])
 
 const data = computed(() => {
@@ -56,11 +56,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
-    class="p-4 rounded-lg flex gap-2 flex-col w-[400px] border transition bg-white border-gray-300"
-  >
+  <div class="basicWrap w-full sm:w-[400px] overflow-hidden">
     <div class="flex items-center">
-      <h3 class="font-bold text-lg">
+      <h3>
         {{ title }}
         <span class="text-sm ml-2">{{
           numWithCommas(data.total[yearIndex])
@@ -72,7 +70,7 @@ onMounted(() => {
       ></span>
     </div>
 
-    <svg ref="el" :viewBox="`0, 0, ${conf.w}, ${conf.h}`">
+    <svg ref="el" :viewBox="`0, 0, ${conf.w}, ${conf.h}`" class="w-full">
       <g class="x-axis" :transform="`translate(0,${conf.h - conf.mb})`" />
       <g class="y-axis1" :transform="`translate(${conf.mx},0)`" />
       <g class="y-axis2" :transform="`translate(${conf.w - conf.mx},0)`" />
@@ -82,7 +80,7 @@ onMounted(() => {
           fill="none"
           :stroke="palette[2]"
           stroke-dasharray="4 3"
-          :opacity="viewIndex !== 2 ? 0.7 : 1"
+          :opacity="viewIndex !== 2 ? 0.5 : 1"
         />
         <path
           class="rest-line"
@@ -139,7 +137,7 @@ onMounted(() => {
     <div class="grid grid-cols-3 gap-2 text-sm px-4">
       <div
         v-for="(l, i) in data.keys"
-        class="cursor-pointer"
+        class="cursor-pointer py-1 rounded-md transition-colors hover:bg-gray-100"
         @click="emit('changeViewIndex', i)"
       >
         <div class="flex items-center justify-center text-xs">

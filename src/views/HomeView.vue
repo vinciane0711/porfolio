@@ -4,7 +4,7 @@ import * as d3 from 'd3'
 import { useStore } from '@/stores/main'
 import ControlPanel from '@/components/home/ControlPanel.vue'
 import TaiwanMap from '@/components/home/TaiwanMap.vue'
-import BarChart from '@/components/home/BarChart.vue'
+// import BarChart from '@/components/home/BarChart.vue'
 import MultiLineChart from '@/components/home/MultiLineChart.vue'
 import Selection from '@/components/form/Selection.vue'
 import Checkbox from '@/components/form/Checkbox.vue'
@@ -105,7 +105,7 @@ const bbb = () => {
           @changeYear="(n:number)=>cntIndex=n"
         />
       </div>
-      <BarChart :data="continuousData[cntIndex]" />
+      <!-- <BarChart :data="continuousData[cntIndex]" /> -->
     </div>
   </div>
 </template>

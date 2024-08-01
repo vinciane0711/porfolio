@@ -59,13 +59,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <MapLayout class="flex-col">
-    <TimelineBar
-      v-if="periods"
-      class="p-4"
-      :periods="periods"
-      v-model:value="cntYear"
-    />
+  <MapLayout>
+    <TimelineBar v-if="periods" :periods="periods" v-model:value="cntYear" />
 
     <!-- <svg ref="barChart" stroke-linejoin="round" font-size="0.75rem"></svg> -->
     <!-- <svg ref="multiline"></svg> -->

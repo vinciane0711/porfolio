@@ -13,6 +13,27 @@
 }
 
 @layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold;
+  }
+
+  h1 {
+    @apply text-3xl;
+  }
+
+  h2 {
+    @apply text-xl;
+  }
+
+  h3 {
+    @apply text-xl;
+  }
+
   table {
     tr {
       th,
@@ -24,6 +45,12 @@
         @apply p-2 text-right first:text-center;
       }
     }
+  }
+}
+
+@layer utilities {
+  .basicWrap {
+    @apply p-4 rounded-lg flex flex-col gap-2 border  border-gray-300 bg-white;
   }
 }
 
@@ -49,12 +76,6 @@
 .village_group {
   path {
     @apply cursor-pointer stroke-white transition;
-  }
-}
-
-.mapWrap {
-  div {
-    @apply h-full w-full p-4 border border-gray-300 rounded-lg  flex flex-col;
   }
 }
 
