@@ -12,7 +12,6 @@ node_modules
 dist
 dist-ssr
 coverage
-yarn.lock
 *.local
 
 /cypress/videos/
