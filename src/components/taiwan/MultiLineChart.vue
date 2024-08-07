@@ -7,7 +7,7 @@ import { numWithCommas } from '@/composables'
 const props = defineProps<{
   years: number[]
   title: string
-  file: ICsvObj<number>
+  file: ICsvObj
   yearIndex: number
   viewIndex: number
 }>()
@@ -19,7 +19,7 @@ const data = computed(() => {
   const [year, row1k, row2k, ...r] = props.file.keys
   const [years, row1, row2, total, rate] = props.file.rows
   return {
-    keys: [row1k, row2k, '增加率'],
+    keys: [row1k, row2k, '增加率 (數)'],
     rest: [row1, row2],
     rate,
     total,
@@ -58,16 +58,11 @@ onMounted(() => {
 <template>
   <div class="basicWrap w-full sm:w-[400px] overflow-hidden">
     <div class="flex items-center">
-      <h3>
-        {{ title }}
-        <span class="text-sm ml-2">{{
-          numWithCommas(data.total[yearIndex])
-        }}</span>
-      </h3>
+      <h3>{{ title }}</h3>
       <span
         class="icon-[mdi--table] text-xl ml-auto text-gray-500 hover:text-gray-700 cursor-pointer"
         @click="emit('openTable', title, file)"
-      ></span>
+      />
     </div>
 
     <svg ref="el" :viewBox="`0, 0, ${conf.w}, ${conf.h}`" class="w-full">
@@ -149,6 +144,9 @@ onMounted(() => {
         </div>
         <p class="text-center font-bold">
           {{ numWithCommas([...data.rest, data.rate][i][yearIndex]) }}
+          <span v-if="i === 2" class="font-normal">
+            ({{ numWithCommas(data.total[yearIndex]) }})
+          </span>
         </p>
       </div>
     </div>

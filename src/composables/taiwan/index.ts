@@ -73,39 +73,8 @@ const admin_code = {
   連江縣: '09007',
 } as any
 
-export interface IBaseType {
-  city: string
-  birth: number
-  death: number
-  nativeRate: number
-  moveIn: number
-  moveOut: number
-  socialRate: number
-  popRate: number
-}
-
-interface ISumData {
-  [year: string]: IBaseType[]
-}
-
-export function diffFunc(type: DiffType, obj: IBaseType) {
-  const { birth, death, moveIn, moveOut, socialRate, nativeRate, popRate } = obj
-  const nativeDiff = birth - death
-  const socialDiff = moveIn - moveOut
-  const popDiff = nativeDiff + socialDiff
-
-  switch (type) {
-    case 'NATIVE':
-      return [birth, -death, nativeDiff, nativeRate]
-    case 'SOCIAL':
-      return [moveIn, -moveOut, socialDiff, socialRate]
-    case 'POP':
-      return [nativeDiff, socialDiff, popDiff, popRate]
-  }
-}
-
 // TODO: fetch data from google sheet
-export const sumData: ISumData = await Promise.all(
+export const sumData = await Promise.all(
   [
     'birth',
     'death',
@@ -119,21 +88,25 @@ export const sumData: ISumData = await Promise.all(
   const [birth, death, moveIn, moveOut, nativeRate, socialRate, popRate] = res
   const years = birth[0]
   const cities = birth.length
-  const result: ISumData = {}
+  const result = []
 
   for (let i = 1; i < years.length; i++) {
-    result[years[i]] = []
     for (let j = 1; j < cities; j++) {
       const city = birth[j][0]
-      result[years[i]].push({
+      const _birth = +birth[j][i]
+      const _death = +death[j][i]
+      const _moveIn = +moveIn[j][i]
+      const _moveOut = +moveOut[j][i]
+      const nativeDiff = _birth - _death
+      const socialDiff = _moveIn - _moveOut
+      const popDiff = nativeDiff + socialDiff
+
+      result.push({
+        year: years[i],
         city,
-        birth: +birth[j][i],
-        death: +death[j][i],
-        nativeRate: +nativeRate[j][i],
-        moveIn: +moveIn[j][i],
-        moveOut: +moveOut[j][i],
-        socialRate: +socialRate[j][i],
-        popRate: +popRate[j][i],
+        NATIVE: [_birth, _death, nativeDiff, +nativeRate[j][i]],
+        SOCIAL: [_moveIn, _moveOut, socialDiff, +socialRate[j][i]],
+        POP: [nativeDiff, socialDiff, popDiff, +popRate[j][i]],
       })
     }
   }
@@ -141,18 +114,45 @@ export const sumData: ISumData = await Promise.all(
   return result
 })
 
-export interface ICsvObj<T> {
+export const sortedData = sumData.reduce(
+  (acc, cnt) => {
+    const { year, city } = cnt
+    for (let i in [0, 1, 2]) {
+      for (let j of ['NATIVE', 'SOCIAL', 'POP'] as DiffType[]) {
+        const n = j !== 'POP' && i === '1' ? -1 : 1
+        const _d = cnt[j][i] * n
+        if (acc[j][i]) {
+          if (acc[j][i][year]) {
+            acc[j][i][year][city] = _d
+          } else {
+            acc[j][i][year] = { [city]: _d }
+          }
+        } else {
+          acc[j][i] = { [year]: { [city]: _d } }
+        }
+      }
+    }
+    return acc
+  },
+  {
+    NATIVE: [],
+    SOCIAL: [],
+    POP: [],
+  } as Record<DiffType, any[]>
+)
+
+export interface ICsvObj {
   keys: string[]
-  rows: T[][]
+  rows: number[][]
 }
 
-export const taiwanData: Record<DiffType, ICsvObj<number>> = await Promise.all(
+export const taiwanData: Record<DiffType, ICsvObj> = await Promise.all(
   ['popIncrement', 'nativeIncrement', 'socialIncrement'].map((k) =>
     csvConvertor(`./data/${k}.csv`)
   )
 ).then((res) => {
   const [pop, native, social] = res.map((r) => {
-    const obj: ICsvObj<number> = { keys: [], rows: [] }
+    const obj: ICsvObj = { keys: [], rows: [] }
     for (const m of r) {
       const _k = m.shift()!
       const r = m.map((r) => +r)

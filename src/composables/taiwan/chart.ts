@@ -49,7 +49,7 @@ export const initChart = (el: HTMLElement, func: (...arg: any) => void) => {
     .selectAll('text')
     .data(cityObj)
     .join('text')
-    .attr('dy', '1rem')
+    .attr('dy', 16)
     .attr('x', 2)
     .attr('y', (d) => y(d) as number)
     .text((d) => d)
@@ -140,7 +140,7 @@ export const initChart = (el: HTMLElement, func: (...arg: any) => void) => {
         (enter) =>
           enter
             .append('text')
-            .attr('dy', '1rem')
+            .attr('dy', 16)
             .attr('x', _w - 2)
             .attr('y', (d) => y(d) as number)
             .text((d) => data[d].toLocaleString()),

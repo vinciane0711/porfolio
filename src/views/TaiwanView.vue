@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import {
   views,
   sumData,
   taiwanData,
-  diffFunc,
+  sortedData,
   type DiffType,
   type ICsvObj,
 } from '@/composables/taiwan'
@@ -13,6 +13,7 @@ import Chart from '@/components/taiwan/MultiLineChart.vue'
 import TimelineBar from '@/components/taiwan/TimelineBar.vue'
 import BarChart from '@/components/taiwan/BarChart.vue'
 import Map from '@/components/taiwan/Map.vue'
+import Table from '@/components/taiwan/Table.vue'
 import { onClickOutside, useWindowSize } from '@vueuse/core'
 import { numWithCommas } from '@/composables'
 
@@ -24,7 +25,7 @@ const cntViewIndex = ref(2)
 const cntCityName = ref('')
 const tableData = ref<{
   name: string
-  table: ICsvObj<number> | undefined
+  table: ICsvObj | undefined
 }>({
   name: '',
   table: undefined,
@@ -39,40 +40,30 @@ const { width } = useWindowSize()
 
 const cityPeriodsData = computed(() => {
   if (!cntCityName.value) return
+  const _d = sumData.filter((c) => c.city === cntCityName.value)!
+  _d.sort((a, b) => +a.year - +b.year)
   const rows: number[][] = [[], [], [], []]
-  Object.values(sumData).forEach((yearData) => {
-    const city = yearData.find((c) => c.city === cntCityName.value)!
-    const d = diffFunc(cntView.value, city)
-    rows[0].push(d[0])
-    rows[1].push(Math.abs(d[1]))
-    rows[2].push(d[2])
-    rows[3].push(d[3])
+  _d.map((y) => y[cntView.value]).forEach((e) => {
+    rows[0].push(e[0])
+    rows[1].push(e[1])
+    rows[2].push(e[2])
+    rows[3].push(e[3])
   })
-
   return {
     keys: ['年分', ...views[cntView.value].cols, '增加數', '增加率'],
     rows: [years, ...rows],
-  } as ICsvObj<number>
+  } as ICsvObj
 })
 
-const cntCityData = computed(() => {
-  return Object.keys(sumData).reduce(
-    (acc: { [year: string]: { [city: string]: number } }, year) => {
-      acc[year] = sumData[year].reduce((a, c) => {
-        a[c.city] = diffFunc(cntView.value, c)[cntViewIndex.value]
-        return a
-      }, {} as { [city: string]: number })
-      return acc
-    },
-    {}
-  )
-})
+const cntCityData = computed(
+  () => sortedData[cntView.value][cntViewIndex.value][cntYear.value]
+)
 
 const dynamicRange = computed(
   () => views[cntView.value].range[cntViewIndex.value]
 )
 
-const openTable = (name: string, data: ICsvObj<number>) => {
+const openTable = (name: string, data: ICsvObj) => {
   tableData.value = { name, table: data }
   modal.value = true
 }
@@ -166,8 +157,8 @@ const changeCity = (name: string) => (cntCityName.value = name)
 
     <!-- MAIN MAP -->
     <Map
-      class="max-w-full max-h-[80%] m-auto md:ml-4"
-      :data="cntCityData[cntYear]"
+      class="max-w-full max-h-[80%] m-auto"
+      :data="cntCityData"
       :range="dynamicRange"
       :cnt-city="cntCityName"
       @changeCity="changeCity"
@@ -241,12 +232,19 @@ const changeCity = (name: string) => (cntCityName.value = name)
 
     <div
       v-if="width >= 1024"
-      class="basicWrap my-auto h-max max-h-full w-[350px] max-xl:fixed max-xl:right-4 max-xl:top-4 max-xl:bottom-4 max-xl:bg-white/60"
+      class="basicWrap my-auto h-max max-h-full w-[350px]"
     >
-      <h3>各縣市資料</h3>
+      <h3>
+        各縣市資料
+        {{
+          numWithCommas(
+            taiwanData[cntView].rows[cntViewIndex + 1][cntYearIndex]
+          )
+        }}
+      </h3>
       <div class="w-max max-h-max h-full overflow-y-scroll">
         <BarChart
-          :data="cntCityData[cntYear]"
+          :data="cntCityData"
           :range="dynamicRange"
           :cnt-city="cntCityName"
           @changeCity="changeCity"
@@ -263,6 +261,7 @@ const changeCity = (name: string) => (cntCityName.value = name)
       </p> -->
   </MapLayout>
 
+  <!-- TODO: modal component -->
   <div
     v-if="modal"
     ref="modalRef"
@@ -274,30 +273,12 @@ const changeCity = (name: string) => (cntCityName.value = name)
           class="icon-[mdi--close] text-xl text-gray-500 hover:text-gray-700 cursor-pointer"
         />
       </button>
-      <template v-if="tableData">
+      <template v-if="tableData.table">
         <h3 class="text-center">
           {{ tableData.name }} {{ views[cntView].title }}
         </h3>
         <div class="w-full overflow-x-auto">
-          <table v-if="tableData.table" class="text-xs [*_td]:p-0.5 rounded-md">
-            <colgroup>
-              <col />
-              <col v-for="y in years" :class="y === cntYear && 'bg-gray-100'" />
-            </colgroup>
-            <tr v-for="(r, i) in tableData.table.rows">
-              <td>{{ tableData.table.keys[i] }}</td>
-              <td
-                v-for="(v, j) in r"
-                :style="{
-                  color: v < 0 ? 'red' : 'current',
-                  textAlign: i === 0 ? 'center' : 'right',
-                }"
-                @click="cntYearIndex = j"
-              >
-                {{ numWithCommas(v) }}
-              </td>
-            </tr>
-          </table>
+          <Table :data="tableData.table" :years="years" :cnt-year="cntYear" />
         </div>
       </template>
     </div>
