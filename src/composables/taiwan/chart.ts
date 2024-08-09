@@ -1,42 +1,21 @@
 import * as d3 from 'd3'
 
-const cityObj = [
-  '臺北市',
-  '新北市',
-  '桃園市',
-  '臺中市',
-  '臺南市',
-  '高雄市',
-  '基隆市',
-  '新竹市',
-  '新竹縣',
-  '苗栗縣',
-  '彰化縣',
-  '南投縣',
-  '雲林縣',
-  '嘉義市',
-  '嘉義縣',
-  '屏東縣',
-  '宜蘭縣',
-  '花蓮縣',
-  '臺東縣',
-  '澎湖縣',
-  '金門縣',
-  '連江縣',
-]
-
 export const margin = { top: 30, right: 10, bottom: 0, left: 10 }
-const barSize = 30
-const n = cityObj.length
-const width = 350
-const _h = barSize * n
-const height = _h + margin.top + margin.bottom
-const _w = width - margin.left - margin.right
+export const initChart = (
+  el: HTMLElement,
+  cityList: string[],
+  func: (...arg: any) => void
+) => {
+  const barSize = 30
+  const n = cityList.length
+  const width = 350
+  const _h = barSize * n
+  const height = _h + margin.top + margin.bottom
+  const _w = width - margin.left - margin.right
 
-export const initChart = (el: HTMLElement, func: (...arg: any) => void) => {
   const barChart = d3.select(el).attr('viewBox', [0, 0, width, height])
   const x = d3.scaleLinear().rangeRound([0, _w])
-  const y = d3.scaleBand().rangeRound([0, _h]).padding(0.2).domain(cityObj)
+  const y = d3.scaleBand().rangeRound([0, _h]).padding(0.2).domain(cityList)
 
   const contentWrap = barChart.select('.contentWrap')
   const barsGroup = contentWrap.select('.barsGroup')
@@ -47,7 +26,7 @@ export const initChart = (el: HTMLElement, func: (...arg: any) => void) => {
 
   textGroup
     .selectAll('text')
-    .data(cityObj)
+    .data(cityList)
     .join('text')
     .attr('dy', 16)
     .attr('x', 2)
@@ -56,7 +35,7 @@ export const initChart = (el: HTMLElement, func: (...arg: any) => void) => {
 
   labelGroup
     .selectAll('rect')
-    .data(cityObj)
+    .data(cityList)
     .join('rect')
     .attr('x', -2)
     .attr('y', (d) => y(d) as number)
@@ -109,7 +88,7 @@ export const initChart = (el: HTMLElement, func: (...arg: any) => void) => {
   function updateChart(data: Record<string, number>) {
     barsGroup
       .selectAll('rect')
-      .data(cityObj)
+      .data(cityList)
       .join(
         (enter) =>
           enter
@@ -135,7 +114,7 @@ export const initChart = (el: HTMLElement, func: (...arg: any) => void) => {
 
     valueGroup
       .selectAll('text')
-      .data(cityObj)
+      .data(cityList)
       .join(
         (enter) =>
           enter

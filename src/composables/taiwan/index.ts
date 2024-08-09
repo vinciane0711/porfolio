@@ -6,11 +6,35 @@ import taiwanMap from '@/assets/data/map/taiwan_main.json'
 const width = 500
 const height = 800
 
+export const cityList = [
+  '臺北市',
+  '新北市',
+  '桃園市',
+  '臺中市',
+  '臺南市',
+  '高雄市',
+  '基隆市',
+  '新竹市',
+  '新竹縣',
+  '苗栗縣',
+  '彰化縣',
+  '南投縣',
+  '雲林縣',
+  '嘉義市',
+  '嘉義縣',
+  '屏東縣',
+  '宜蘭縣',
+  '花蓮縣',
+  '臺東縣',
+  '澎湖縣',
+  '金門縣',
+  '連江縣',
+]
+
 const csvConvertor = async (path: string) =>
   await d3.text(path).then((res) => d3.csvParseRows(res))
 
 export type DiffType = 'POP' | 'NATIVE' | 'SOCIAL'
-
 export const views: Record<
   DiffType,
   {
@@ -47,31 +71,6 @@ export const views: Record<
     ],
   },
 }
-
-const admin_code = {
-  新北市: '65000',
-  臺北市: '63000',
-  桃園市: '68000',
-  臺中市: '66000',
-  臺南市: '67000',
-  高雄市: '64000',
-  宜蘭縣: '10002',
-  新竹縣: '10004',
-  苗栗縣: '10005',
-  彰化縣: '10007',
-  南投縣: '10008',
-  雲林縣: '10009',
-  嘉義縣: '10010',
-  屏東縣: '10013',
-  臺東縣: '10014',
-  花蓮縣: '10015',
-  澎湖縣: '10016',
-  基隆市: '10017',
-  新竹市: '10018',
-  嘉義市: '10020',
-  金門縣: '09020',
-  連江縣: '09007',
-} as any
 
 // TODO: fetch data from google sheet
 export const sumData = await Promise.all(

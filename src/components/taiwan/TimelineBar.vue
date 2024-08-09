@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import Button from '@/components/Button.vue'
 const props = defineProps<{
   periods: number[] | string[]
 }>()
@@ -42,41 +43,31 @@ const runInterval = () => {
       ></option>
     </datalist> -->
 
-    <button
-      class="bg-gray-200 rounded-full flex w-6 h-6"
+    <Button
+      :icon="intervalId ? 'icon-[mdi--pause]' : 'icon-[mdi--play]'"
+      :border="true"
+      size="md"
       @click="intervalId ? stopInterval() : runInterval()"
-    >
-      <span
-        class="m-auto"
-        :class="intervalId ? 'icon-[mdi--pause]' : 'icon-[mdi--play]'"
-      />
-    </button>
-    <!-- <span class="min-w-[30px] text-center">{{ periods[cntYear!] }}</span> -->
+    />
   </div>
 </template>
 <style>
 /* ref: https://codepen.io/t_afif/pen/KKGpmGE?editors=1100 */
-
 input {
   --c: orange; /* active color */
   --g: 4px; /* the gap */
   --l: 6px; /* line thickness*/
-  --s: 22px; /* thumb size*/
+  --s: 32px; /* thumb size*/
 
-  width: 100%;
+  flex-grow: 1;
   height: var(--s); /* needed for Firefox*/
   --_c: color-mix(in srgb, var(--c), #000 var(--p, 0%));
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  /* background: none; */
   cursor: pointer;
   overflow: hidden;
 }
-/* input:focus-visible,
-input:hover {
-  --p: 25%;
-} */
 input:active,
 input:focus-visible {
   --_b: var(--s);

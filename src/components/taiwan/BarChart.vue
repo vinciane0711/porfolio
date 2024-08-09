@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { initChart, margin } from '@/composables/taiwan/chart'
 
 const props = defineProps<{
   data: Record<string, number>
   range: [number, number]
+  cityList: string[]
   cntCity?: string
 }>()
 
@@ -14,6 +15,7 @@ onMounted(() => {
   if (!el.value) return
   const { updateRange, updateChart, selectCity } = initChart(
     el.value,
+    props.cityList,
     (n: string) => emit('changeCity', n)
   )
 
@@ -40,10 +42,6 @@ onMounted(() => {
       selectCity(props.cntCity)
     }
   )
-})
-
-onUnmounted(() => {
-  console.log('onUnmounted')
 })
 </script>
 

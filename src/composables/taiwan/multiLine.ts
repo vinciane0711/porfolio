@@ -1,11 +1,12 @@
 import * as d3 from 'd3'
 
 export const conf = {
-  w: 400,
-  h: 200,
+  w: 320,
+  h: 160,
   mt: 10,
   mb: 30,
-  mx: 40,
+  ml: 40,
+  mr: 30,
 }
 
 type MatrixArray = [number, number][]
@@ -13,8 +14,8 @@ type MatrixArray = [number, number][]
 export const initChart = (el: HTMLElement, years: number[], func: any) => {
   const svg = d3.select(el)
   const x = d3.scaleLinear(d3.extent(years) as number[], [
-    conf.mx,
-    conf.w - conf.mx,
+    conf.ml,
+    conf.w - conf.mr,
   ])
 
   const y = d3.scaleLinear().range([conf.h - conf.mb, conf.mt])
@@ -36,7 +37,7 @@ export const initChart = (el: HTMLElement, years: number[], func: any) => {
     .call((g) =>
       g
         .selectAll('.tick text')
-        .attr('x2', conf.w - conf.mx * 2)
+        .attr('x2', conf.w - conf.ml - conf.mr)
         .attr('transform', 'translate(-10,5) rotate(-40)')
     )
 
@@ -80,18 +81,18 @@ export const initChart = (el: HTMLElement, years: number[], func: any) => {
       .call((g) =>
         g
           .selectAll('.tick line')
-          .attr('x2', conf.w - conf.mx * 2)
+          .attr('x2', conf.w - conf.ml - conf.mr)
           .attr('stroke-opacity', '0.1')
       )
       .call((g) => g.select('.domain').remove())
-      .call((g) => g.join('text').attr('x', -conf.mx).attr('y', 10))
+      .call((g) => g.join('text').attr('x', -conf.ml).attr('y', 10))
 
     svg
       .select('.y-axis2')
       .call(d3.axisRight(y2).ticks(conf.h / 40, '~s'))
       .call((g) => g.select('.domain').remove())
       .call((g) => g.selectAll('.tick line').attr('stroke-opacity', '0.3'))
-      .call((g) => g.join('text').attr('x', -conf.mx).attr('y', 10))
+      .call((g) => g.join('text').attr('x', -conf.mr).attr('y', 10))
 
     svg.select('.rate-line').attr('d', line2(transposeFunc(rate)))
     svg
