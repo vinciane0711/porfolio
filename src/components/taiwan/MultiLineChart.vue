@@ -118,8 +118,7 @@ onMounted(() => {
     </g>
   </svg>
 
-  <!-- legends & cntValues -->
-  <div class="grid grid-cols-3 gap-2 text-sm">
+  <div class="grid grid-cols-3 text-sm">
     <div
       v-for="(l, i) in data.keys"
       class="cursor-pointer"

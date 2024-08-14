@@ -40,10 +40,6 @@ onMounted(() => {
     }
   )
 })
-
-onUnmounted(() => {
-  console.log('onUnmounted')
-})
 </script>
 
 <template>

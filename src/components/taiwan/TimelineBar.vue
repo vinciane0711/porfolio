@@ -35,19 +35,11 @@ const runInterval = () => {
       v-model.number="cntYear"
       class="grow text-indigo-500"
     />
-    <!-- <datalist id="tickmarks">
-      <option
-        v-for="y in periods.length"
-        :value="y"
-        :label="y.toString()"
-      ></option>
-    </datalist> -->
 
     <Button
       :icon="intervalId ? 'icon-[mdi--pause]' : 'icon-[mdi--play]'"
-      :border="true"
-      size="md"
       @click="intervalId ? stopInterval() : runInterval()"
+      class="sm:size-6 size-8"
     />
   </div>
 </template>
@@ -59,14 +51,18 @@ input {
   --l: 6px; /* line thickness*/
   --s: 32px; /* thumb size*/
 
-  flex-grow: 1;
   height: var(--s); /* needed for Firefox*/
   --_c: color-mix(in srgb, var(--c), #000 var(--p, 0%));
+  appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  appearance: none;
   cursor: pointer;
   overflow: hidden;
+}
+@media screen and (min-width: 450px) {
+  input {
+    --s: 24px;
+  }
 }
 input:active,
 input:focus-visible {

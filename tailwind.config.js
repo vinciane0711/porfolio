@@ -10,6 +10,9 @@ module.exports = {
         xs: '450px',
         '2xl': '1440px',
       },
+      backgroundImage: {
+        'arrow-icon': "url('/img/arrow.svg')",
+      },
     },
   },
   plugins: [addDynamicIconSelectors()],
