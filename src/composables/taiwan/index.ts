@@ -219,13 +219,17 @@ export const initMap = (el: HTMLElement, func: (...arg: any) => void) => {
       .raise()
   }
 
-  // const legendWrap = svg.append('g').attr('transform', `translate(${width - 200},${height - 80})`)
-  // createLegend(legendWrap, colorFunc, { title: '單位（人)', width: 200, tickFormat: '~s' })
-
   const colorFunc = d3.scaleLinear(
     [-25000, 0, 25000],
     ['blue', 'white', 'orange']
   )
+
+  // const legendWrap = svg.append('g')
+  // createLegend(legendWrap, colorFunc, {
+  //   title: '單位（人)',
+  //   width: 200,
+  //   tickFormat: '~s',
+  // })
 
   function updateRange(range: [number, number]) {
     const [min, max] = range

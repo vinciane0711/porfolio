@@ -80,7 +80,7 @@
 }
 
 #app {
-  @apply h-[100dvh] flex;
+  @apply h-[100dvh] flex bg-gray-100;
 }
 
 body ::-webkit-scrollbar-track {

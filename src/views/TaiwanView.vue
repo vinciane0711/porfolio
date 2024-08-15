@@ -79,57 +79,53 @@ const changeCity = (name: string) => (cntCityName.value = name)
 </script>
 
 <template>
-  <MapLayout class="max-xs:gap-4">
+  <MapLayout class="max-xs:gap-2">
     <div
       v-if="width >= 450"
-      class="flex flex-col gap-2 xs:gap-4 w-full xs:w-max overflow-y-auto"
+      class="flex flex-col gap-2 w-full sm:w-max overflow-y-auto"
     >
       <h1 class="inline-flex items-center">
+        全台人口變化圖
         <Selector
           class="mr-2"
           v-model="cntYearIndex"
           :options="years"
           :indexValue="true"
         />
-        全台人口變化
       </h1>
 
-      <TimelineBar :periods="years" v-model:value="cntYearIndex" />
-      <div class="flex items-center text-sm">
-        <div
-          class="flex divide-x border border-gray-300 rounded-lg overflow-hidden"
-        >
+      <Card>
+        <TimelineBar :periods="years" v-model:value="cntYearIndex" />
+        <div class="flex items-center text-sm justify-between">
           <Selector
-            class="rounded-none"
-            v-model="cntView"
-            :options="viewTitles"
-            :indexValue="true"
-          />
-          <Selector
-            class="rounded-none"
+            class="border border-gray-300"
             v-model="cntCityName"
             :options="cityList"
           >
             <template #default> <option value="">全台灣</option></template>
           </Selector>
-        </div>
 
-        <div
-          class="ml-auto flex divide-x rounded-lg overflow-hidden border border-gray-300"
-        >
-          <button
-            v-for="(y, i) in [...views[cntView].cols, '總覽']"
-            class="p-1 transition aria-pressed:bg-gray-200"
-            :aria-pressed="cntViewIndex === i"
-            @click="() => (cntViewIndex = i)"
+          <div
+            class="flex divide-x border border-gray-300 rounded-md overflow-hidden"
           >
-            {{ y }}
-          </button>
+            <Selector
+              class="rounded-none"
+              v-model="cntView"
+              :options="viewTitles"
+              :indexValue="true"
+            />
+            <Selector
+              class="rounded-none"
+              v-model="cntViewIndex"
+              :options="[...views[cntView].cols, '總覽']"
+              :indexValue="true"
+            />
+          </div>
         </div>
-      </div>
+      </Card>
 
       <Card>
-        <template #title>全台灣</template>
+        <template #title>全台灣 {{ views[cntView].title }}</template>
         <template #header>
           <Button
             icon="icon-[mdi--table]"
@@ -147,7 +143,7 @@ const changeCity = (name: string) => (cntCityName.value = name)
       </Card>
 
       <Card v-if="cityPeriodsData">
-        <template #title>{{ cntCityName }}</template>
+        <template #title>{{ cntCityName }} {{ views[cntView].title }}</template>
         <template #header>
           <Button
             icon="icon-[mdi--table]"
@@ -184,7 +180,7 @@ const changeCity = (name: string) => (cntCityName.value = name)
         </div>
       </Card>
       <a
-        class="text-sm text-gray-500"
+        class="text-xs text-gray-500 mt-auto"
         href="https://www.ris.gov.tw/app/portal/346"
         target="_blank"
       >
@@ -193,17 +189,20 @@ const changeCity = (name: string) => (cntCityName.value = name)
     </div>
 
     <!-- MAIN MAP -->
-    <Map
-      class="max-w-full max-h-[80%] m-auto"
-      :data="cntCityData"
-      :range="dynamicRange"
-      :cnt-city="cntCityName"
-      @changeCity="changeCity"
-    />
+    <div class="flex flex-grow xs:h-full h-1/3">
+      <Map
+        class="xs:max-h-[80%] m-auto max-h-full"
+        :data="cntCityData"
+        :range="dynamicRange"
+        :cnt-city="cntCityName"
+        @changeCity="changeCity"
+      />
+    </div>
 
+    <!-- mobile -->
     <template v-if="width < 450">
-      <div class="border border-gray-300 rounded-lg flex flex-col gap-3 p-3">
-        <div class="flex text-lg font-bold *:flex-grow items-center">
+      <Card>
+        <div class="flex text-lg font-bold [&>select]:flex-grow items-center">
           <Selector
             v-model="cntYearIndex"
             :options="years"
@@ -227,7 +226,6 @@ const changeCity = (name: string) => (cntCityName.value = name)
             "
           />
         </div>
-        <hr />
         <TimelineBar :periods="years" v-model:value="cntYearIndex" />
         <Chart
           :years="years"
@@ -237,9 +235,9 @@ const changeCity = (name: string) => (cntCityName.value = name)
           @changeYear="(n:number)=>cntYearIndex=n"
           @changeViewIndex="(n:number)=>cntViewIndex=n"
         />
-      </div>
+      </Card>
       <a
-        class="text-sm text-gray-500"
+        class="text-xs text-gray-500"
         href="https://www.ris.gov.tw/app/portal/346"
         target="_blank"
       >
@@ -248,7 +246,11 @@ const changeCity = (name: string) => (cntCityName.value = name)
     </template>
 
     <Card v-if="width >= 1024" class="my-auto h-max max-h-full">
-      <template #title> 各縣市資料</template>
+      <template #title
+        >各縣市 {{ views[cntView].title }}-{{
+          views[cntView].cols[cntViewIndex] || '總覽'
+        }}</template
+      >
       <template #header>
         {{
           numWithCommas(
