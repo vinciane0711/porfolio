@@ -4,7 +4,7 @@ import { initMap } from '@/composables/taiwan'
 const props = defineProps<{
   data: Record<string, number>
   range: [number, number]
-  cntCity?: string
+  cntCity: string
 }>()
 
 const el = ref<HTMLElement>()
@@ -35,7 +35,6 @@ onMounted(() => {
   watch(
     () => props.cntCity,
     () => {
-      if (!props.cntCity) return
       selectCity(props.cntCity)
     }
   )

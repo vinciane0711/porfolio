@@ -18,7 +18,7 @@ const data = computed(() => {
   const [year, row1k, row2k, ...r] = props.file.keys
   const [years, row1, row2, total, rate] = props.file.rows
   return {
-    keys: [row1k, row2k, '增加率 (數)'],
+    keys: [row1k, row2k, '增加率 (‰)'],
     rest: [row1, row2],
     rate,
     total,
@@ -118,10 +118,11 @@ onMounted(() => {
     </g>
   </svg>
 
-  <div class="grid grid-cols-3 text-sm">
+  <div class="grid grid-cols-3 text-xs">
     <div
       v-for="(l, i) in data.keys"
-      class="cursor-pointer"
+      class="cursor-pointer rounded-md p-1 transition-colors"
+      :class="viewIndex === i && 'bg-gray-100'"
       @click="emit('changeViewIndex', i)"
     >
       <div class="flex items-center justify-center">
@@ -133,9 +134,9 @@ onMounted(() => {
       </div>
       <p class="text-center font-bold">
         {{ numWithCommas([...data.rest, data.rate][i][yearIndex]) }}
-        <span v-if="i === 2" class="font-normal">
+        <!-- <span v-if="i === 2" class="font-normal">
           ({{ numWithCommas(data.total[yearIndex]) }})
-        </span>
+        </span> -->
       </p>
     </div>
   </div>

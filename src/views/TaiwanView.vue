@@ -184,7 +184,7 @@ const changeCity = (name: string) => (cntCityName.value = name)
         href="https://www.ris.gov.tw/app/portal/346"
         target="_blank"
       >
-        資料來源：內政部戶政司全球資訊網
+        資料來源：內政部戶政司全球資訊網-人口統計資料
       </a>
     </div>
 
@@ -241,7 +241,7 @@ const changeCity = (name: string) => (cntCityName.value = name)
         href="https://www.ris.gov.tw/app/portal/346"
         target="_blank"
       >
-        資料來源：內政部戶政司全球資訊網
+        資料來源：內政部戶政司全球資訊網-人口統計資料
       </a>
     </template>
 

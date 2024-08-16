@@ -53,8 +53,8 @@ onMounted(() => {
     >
       <g class="barsGroup"></g>
       <g class="textGroup"></g>
-      <g class="labelGroup"></g>
       <g class="valueGroup" text-anchor="end"></g>
+      <g class="labelGroup"></g>
       <line stroke="var(--gray-300)" stroke-dasharray="4 3" :y1="0" />
     </g>
   </svg>

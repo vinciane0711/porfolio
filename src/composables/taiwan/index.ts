@@ -212,6 +212,8 @@ export const initMap = (el: HTMLElement, func: (...arg: any) => void) => {
 
   function selectCity(id: string) {
     cityGroup.selectAll('path').attr('filter', '').attr('stroke', '')
+
+    if (!id) return
     cityGroup
       .select(`path[data-city="${id}"]`)
       .attr('filter', 'url(#shadow)')

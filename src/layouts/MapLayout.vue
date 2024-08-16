@@ -1,6 +1,6 @@
 <template>
   <main
-    class="p-4 lg:p-8 flex max-xs:flex-col h-full w-full max-w-[1440px] mx-auto overflow-hidden"
+    class="p-4 lg:p-8 flex max-xs:flex-col h-full w-full max-w-[1440px] max-h-[1080px] m-auto overflow-hidden"
   >
     <slot />
     <div

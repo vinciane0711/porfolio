@@ -23,7 +23,7 @@
   }
 
   h1 {
-    @apply text-3xl;
+    @apply text-2xl;
   }
 
   h2 {
@@ -35,15 +35,15 @@
   }
 
   table {
-    tr {
-      th,
-      td {
-        @apply whitespace-nowrap border border-gray-300;
-      }
+    @apply border-collapse border-spacing-0 border border-gray-300 text-sm whitespace-nowrap table-fixed;
 
-      td {
-        @apply p-2 text-right first:text-center;
-      }
+    th,
+    td {
+      @apply border border-gray-300 p-2;
+    }
+
+    td {
+      @apply text-right first:text-center;
     }
   }
 }
@@ -80,7 +80,7 @@
 }
 
 #app {
-  @apply h-[100dvh] flex bg-gray-100;
+  @apply h-[100dvh] flex max-xs:flex-col bg-gray-100;
 }
 
 body ::-webkit-scrollbar-track {

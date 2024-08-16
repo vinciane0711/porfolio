@@ -4,10 +4,13 @@ import { RouterLink, RouterView } from 'vue-router'
 
 <template>
   <div
-    class="p-4 md:flex gap-2 flex-col text-xl text-gray-500 bg-gray-300 hidden"
+    class="p-4 flex gap-4 xs:flex-col text-2xl text-gray-500 border-b xs:border-r border-gray-300"
   >
-    <router-link to="/">
+    <router-link to="/" class="flex">
       <span class="icon-[mdi--home]"></span>
+    </router-link>
+    <router-link to="/" class="flex">
+      <span class="icon-[mdi--map]"></span>
     </router-link>
   </div>
 
