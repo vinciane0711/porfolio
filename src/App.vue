@@ -9,9 +9,9 @@ import { RouterLink, RouterView } from 'vue-router'
     <router-link to="/" class="flex">
       <span class="icon-[mdi--home]"></span>
     </router-link>
-    <router-link to="/" class="flex">
+    <!-- <router-link to="/" class="flex">
       <span class="icon-[mdi--map]"></span>
-    </router-link>
+    </router-link> -->
   </div>
 
   <RouterView />

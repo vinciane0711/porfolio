@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { conf, initChart } from '@/composables/taiwan/multiLine'
+import { conf, initChart } from '@/components/taiwan/multiLineChart'
 import { type ICsvObj } from '@/composables/taiwan'
 import { numWithCommas } from '@/composables'
 

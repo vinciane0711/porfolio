@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { initChart, margin } from '@/composables/taiwan/chart'
+import { initChart, margin } from '@/components/taiwan/barChart'
 
 const props = defineProps<{
   data: Record<string, number>

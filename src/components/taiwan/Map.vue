@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
-import { initMap } from '@/composables/taiwan'
+import { onMounted, ref, watch } from 'vue'
+import { initMap } from '@/components/taiwan/map'
 const props = defineProps<{
   data: Record<string, number>
   range: [number, number]
