@@ -34,7 +34,7 @@ jobs:
       - name: Build
         run: yarn build-only
         env:
-          VITE_GTAG: '${{ env.GTAG }}'
+          VITE_GTAG: ${{ vars.GTAG }}
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
